@@ -54,6 +54,21 @@ def turn_to_pixel(vec,size=[160,160,96]):
     result = [t[i]*size[i]/2 for i in range(0,3)]
     return np.array(result)
 
+# function: extract vectors from numpy file
+def get_ground_truth_vectors(main_path,file_name):
+    a = np.load(os.path.join(main_path,'affine_standard',file_name),allow_pickle=True)
+    [t,x,y,s,img_center] = [a[12],a[5],a[7],a[11],a[14]]
+    result = {'t':t,'x':x,'y':y,'s':s,'img_center':img_center}
+    return result
+
+def get_predicted_vectors(main_path,file1,file2,vector_true):
+    f1 = np.load(os.path.join(main_path,'matrix-pred',file1),allow_pickle=True)
+    f2 = np.load(os.path.join(main_path,'matrix-pred',file2),allow_pickle=True)
+    t = turn_to_pixel(f1[0])
+    [x,y] = [f2[1],f2[-1]]
+    result = {'t':t,'x':x,'y':y,'s':vector_true['s'],'img_center':vector_true['img_center']}
+    return result
+
 # function: find a list of all center coordinate given start point and number of planes for SA stack
 def find_center_list(start_center,n,num_of_plane,slice_thickness):
     # n is normal vector
