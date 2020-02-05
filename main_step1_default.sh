@@ -13,16 +13,18 @@ export CG_PATIENT_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/Patien
 # enter the name of folder where you save the trained deep learning model 
 export CG_MODEL_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/Model/" 
 
-# enter the name of folder where you want to save any statistical output
-export CG_STAT_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/Prediction_Statistics/" 
 
 
 # define some parameters
 
 export CUDA_VISIBLE_DEVICES="1" # GPU you use: 0 or 1
 
-export CG_NUM_CLASSES=10 #10 for LV, 14 for RV
+export CG_NUM_CLASSES=10 # the number of labels: 10 for LV, 14 for RV
 
+export CG_RESAMPLE_SIZE=1.5 # resampled pixel size in mm
+
+export CG_SAX_STACK_THICKNESS=8 # the thickness between two adjacenet SAX stack slices in mm
+ 
 # parameters for generator
 export CG_BATCH_SIZE=1
 export CG_XY_RANGE="0.1"   #0.1

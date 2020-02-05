@@ -61,12 +61,12 @@ def get_ground_truth_vectors(main_path,file_name):
     result = {'t':t,'x':x,'y':y,'s':s,'img_center':img_center}
     return result
 
-def get_predicted_vectors(main_path,file1,file2,vector_true):
-    f1 = np.load(os.path.join(main_path,'matrix-pred',file1),allow_pickle=True)
-    f2 = np.load(os.path.join(main_path,'matrix-pred',file2),allow_pickle=True)
+def get_predicted_vectors(main_path,file1,file2,image_center):
+    f1 = np.load(os.path.join(main_path,file1),allow_pickle=True)
+    f2 = np.load(os.path.join(main_path,file2),allow_pickle=True)
     t = turn_to_pixel(f1[0])
     [x,y] = [f2[1],f2[-1]]
-    result = {'t':t,'x':x,'y':y,'s':vector_true['s'],'img_center':vector_true['img_center']}
+    result = {'t':t,'x':x,'y':y,'s':np.array([1,1,2/3]),'img_center':image_center}
     return result
 
 # function: find a list of all center coordinate given start point and number of planes for SA stack
@@ -184,6 +184,18 @@ def find_all_target_files(target_file_name,main_folder):
         F = np.concatenate((F,f))
     return F
 
+# function: color box addition
+def color_box(image):
+    [sx,sy] = [image.shape[0],image.shape[1]]
+    new_image = np.ones((sx,sy))
+    for i in range(sx):
+        for j in range(sy):
+            new_image[i,j] = image[i,j]
+    for j in range(sy-10,sy):
+        for i in range(sx-20,sx):
+            new_image[i,j] = new_image.max()
+    return new_image
+
 # function: draw an arbitrary axis on one image 
 def draw_arbitrary_axis(image,axis,start_point,length = 500):
     '''length defines how long the axis we want to draw'''
@@ -233,16 +245,16 @@ def draw_plane_intersection(plane2_image,plane1_x,plane1_y,plane1_affine,plane2_
 
 # function: count pixel belonged to one label
 def count_pixel(seg,target_val):
-  a,b,c = seg.shape
-  count1 = 0; 
-  p1 = []; 
-  for i in range(0,a):
-    for j in range(0,b):
-      for k in range(0,c):
-        if seg[i,j,k] == target_val:
-          count1 = count1+1
-          p1.append([i,j,k])
-  return count1, p1
+    a,b,c = seg.shape
+    count1 = 0; 
+    p1 = []; 
+    for i in range(0,a):
+        for j in range(0,b):
+            for k in range(0,c):
+                if seg[i,j,k] == target_val:
+                    count1 = count1+1
+                    p1.append([i,j,k])
+    return count1, p1
 
 # function: excel write
 def xlsx_save(filepath,result,par,index_of_par):
@@ -383,8 +395,8 @@ def draw_aha_segments(image,AHA_axis,LV_center):
 # function: find the number of slices upper the basal plane and the number of slices lower the basal plane for SAX stack. the stack starts from 2 planes before where
 # LV segmentation starts and ends two planes after where LV segmentaion ends. 
 def find_num_of_slices_in_SAX(mpr_data,image_center,t_m,x_m,y_m,seg_m_data):
+    ''' returned a is the number of planes upon the basal plane, returned b is the number of planes below the basal plane'''
     n_m =  normalize(np.cross(x_m,y_m))
-
     test_a = 1
     a_manual = 0
     while test_a == True:
@@ -405,7 +417,7 @@ def find_num_of_slices_in_SAX(mpr_data,image_center,t_m,x_m,y_m,seg_m_data):
 
 
 # function: find which plane is base, mid or apex
-def particular_plane_in_stack(a,b,num_of_section,base_no,mid_no,apex_no):
+def particular_thirds_in_stack(a,b,num_of_section,base_no,mid_no,apex_no):
     '''a and b's meaning can be found in function find_num_of_slices_in_SAX'''
     start = 3
     end = a + b +1 - 2

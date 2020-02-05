@@ -16,8 +16,6 @@ class Experiment():
     # model 
     self.model_dir = os.environ['CG_MODEL_DIR']
 
-    # statistic
-    self.stat_dir = os.environ['CG_STAT_DIR']
   
     # Dimension of padded input, for training.
     self.dim = (int(os.environ['CG_CROP_X']), int(os.environ['CG_CROP_Y']), int(os.environ['CG_CROP_Z']))
@@ -27,6 +25,12 @@ class Experiment():
   
     # Number of Classes (Including Background)
     self.num_classes = int(os.environ['CG_NUM_CLASSES'])
+
+    # pixel dimension in mm (resampled image)
+    self.pixel_size = float(os.environ['CG_RESAMPLE_SIZE'])
+
+    # slice thickness in SAX stack
+    self.slice_thickness = int(os.environ['CG_SAX_STACK_THICKNESS'])
   
     # UNet Depth
     self.unet_depth = 5
