@@ -1,10 +1,14 @@
 # enter the name of main directory
 export CG_MAIN_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/"
 
-# enter the name of folder where you save all the patient cases with original images
+# if you have non-resampled image:
+# enter the name of folder where you save all the patient cases with original images (not resampled)
 # e.g. if the cases are saved as /home/jack/patient_000, CG_RAW_DIR = '/home/jack/'
-export CG_RAW_DIR="/Data/McVeighLab/projects/Zhennong/AI/AI_datasets/"
+export CG_RAW_DIR="/media/McVeighLab/wip/ucsd_lvad/to_be_reviewed/"
+export CG_RESAMPLE_DIR="/home/cnn/Documents/Resample_Data/"
 
+
+# if you already resample all your images:
 # enter the name of folder where you save all the patient cases with resampled images
 # all the predicted output will also be saved in each patient individual sub-folder in this folder
 # e.g. if the cases are saved as /home/jack/patient_000, CG_INPUT_DIR = '/home/jack/'

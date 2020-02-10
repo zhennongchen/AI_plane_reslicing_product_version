@@ -26,6 +26,11 @@ cg = segcnn.Experiment()
 task_list = ['seg','2C-r','2C-t','3C-r','3C-t','4C-r','4C-t','BASAL-r','BASAL-t'] 
 task_num_list = list(range(0,9)) # select the task 
 
+###########
+# define patient CT image list
+img_list = ff.find_all_target_files(['to_be_reviewed/*/img-nii-sm/*.nii.gz'],cg.patient_dir)
+print('finish loading all patient images')
+
 #########
 # build the model
 shape = cg.dim + (1,)
@@ -49,10 +54,6 @@ model_outputs += [y_direction]
 model = Model(inputs = model_inputs,outputs = model_outputs)
 print('finish building the model')
 
-###########
-# define patient CT image list
-img_list = ff.find_all_target_files(['ucsd_*/*/img-nii-sm/*.nii.gz'],cg.patient_dir)
-print('finish loading all patient images')
 
 ##########
 # define the generator

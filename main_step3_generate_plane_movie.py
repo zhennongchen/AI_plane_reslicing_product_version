@@ -13,8 +13,8 @@ import matplotlib
 matplotlib.use('Agg')
 cg = segcnn.Experiment()
 
-# find the patient_list
-patient_list = ff.find_all_target_files(['ucsd_*/*'],cg.patient_dir)
+# define the patient_list
+patient_list = ff.find_all_target_files(['to_be_reviewed/*'],cg.patient_dir)
 
 for patient in patient_list:
     patient_class = os.path.basename(os.path.dirname(patient))

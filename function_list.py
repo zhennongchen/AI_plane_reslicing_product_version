@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# this script saved most of functions widely used in other scripts
+# this script saved functions used in other scripts
 import numpy as np
 import math
 import glob as gb
