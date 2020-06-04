@@ -406,13 +406,29 @@ def find_num_of_slices_in_SAX(mpr_data,image_center,t_m,x_m,y_m,seg_m_data):
     a_manual += 1
 
     test_b = 1
-    b_manual = 0
+    b_manual = 2
     while test_b == True:
         b_manual += 1
         plane = reslice_mpr(mpr_data,(image_center + t_m + (n_m) * 8 * b_manual / 1.5),x_m,y_m,1,1,define_interpolation(seg_m_data,Fill_value=0,Method='nearest'))
         test_b = (1.0 in plane)
+        if test_b == False:
+            # in case there is a gap that is not the end of LV, we keep searching with two slices away
+            c = b_manual + 1
+            plane1 = reslice_mpr(mpr_data,(image_center + t_m + (n_m) * 8 * c / 1.5),x_m,y_m,1,1,define_interpolation(seg_m_data,Fill_value=0,Method='nearest'))
+            
+            cc = b_manual + 2
+            plane2 = reslice_mpr(mpr_data,(image_center + t_m + (n_m) * 8 * cc / 1.5),x_m,y_m,1,1,define_interpolation(seg_m_data,Fill_value=0,Method='nearest'))
+            
+            t1 = (1.0 in plane1);t2 = (1.0 in plane2)
+            if t2 == True:
+                b_manual = cc; test_b = 1
+            if (t2 == False) and (t1 == True):
+                b_manual = c; test_b = 1
+            if (t1 == False) and (t2 == False):
+                test_b = 0
+                
     b_manual += 1
-    
+
     return a_manual,b_manual
 
 

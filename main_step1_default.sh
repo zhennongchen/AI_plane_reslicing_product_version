@@ -1,21 +1,22 @@
 # enter the name of main directory
-export CG_MAIN_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/"
+export CG_MAIN_DIR="/Data/McVeighLabSuper/projects/Zhennong/Dataset/Tendyne_Patients_processed/"
 
 # if you have non-resampled image:
 # enter the name of folder where you save all the patient cases with original images (not resampled)
 # e.g. if the cases are saved as /home/jack/patient_000, CG_RAW_DIR = '/home/jack/'
-export CG_RAW_DIR="/media/McVeighLab/wip/ucsd_lvad/to_be_reviewed/"
-export CG_RESAMPLE_DIR="/home/cnn/Documents/Resample_Data/"
+#export CG_RAW_DIR="/media/McVeighLab/wip/ucsd_lvad/to_be_reviewed/"
+#export CG_RESAMPLE_DIR="/home/cnn/Documents/Resample_Data/"
+export CG_RAW_DIR="/Data/McVeighLabSuper/projects/Zhennong/Dataset/Tendyne_Patients_processed/"
 
 
 # if you already resample all your images:
 # enter the name of folder where you save all the patient cases with resampled images
 # all the predicted output will also be saved in each patient individual sub-folder in this folder
 # e.g. if the cases are saved as /home/jack/patient_000, CG_INPUT_DIR = '/home/jack/'
-export CG_PATIENT_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/Patient_Folder/" 
+export CG_PATIENT_DIR="/Data/McVeighLabSuper/projects/Zhennong/AI/Product_Test/Patient_Folder/" 
 
 # enter the name of folder where you save the trained deep learning model 
-export CG_MODEL_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/Model/" 
+export CG_MODEL_DIR="/Data/McVeighLabSuper/projects/Zhennong/AI/CNN/all-classes-all-phases-data-1.5/Model/" 
 
 
 
@@ -23,7 +24,7 @@ export CG_MODEL_DIR="/Data/McVeighLab/projects/Zhennong/AI/Product_Test/Model/"
 
 export CUDA_VISIBLE_DEVICES="1" # GPU you use: 0 or 1
 
-export CG_NUM_CLASSES=10 # the number of labels: 10 for LV, 14 for RV
+export CG_NUM_CLASSES=5 # the number of labels: 10 for LV, 14 for RV
 
 export CG_RESAMPLE_SIZE=1.5 # resampled pixel size in mm
 
