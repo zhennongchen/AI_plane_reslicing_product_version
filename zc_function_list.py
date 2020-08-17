@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# this script saved functions used in other scripts
+# this script saved most of functions widely used in other scripts
 import numpy as np
 import math
 import glob as gb
@@ -12,6 +12,7 @@ from nibabel.affines import apply_affine
 import math
 import xlsxwriter as xl
 import string
+import matplotlib.pyplot as plt
 
 # function: normalize one vector
 def normalize(x):
@@ -61,12 +62,18 @@ def get_ground_truth_vectors(main_path,file_name):
     result = {'t':t,'x':x,'y':y,'s':s,'img_center':img_center}
     return result
 
-def get_predicted_vectors(main_path,file1,file2,image_center):
-    f1 = np.load(os.path.join(main_path,file1),allow_pickle=True)
-    f2 = np.load(os.path.join(main_path,file2),allow_pickle=True)
+def get_seth_kligerman_vectors(main_path,file_name):
+    a = np.load(os.path.join(main_path,'affine_seth',file_name),allow_pickle=True)
+    [t,x,y,s,img_center] = [a[12],a[5],a[7],a[11],a[14]]
+    result = {'t':t,'x':x,'y':y,'s':s,'img_center':img_center}
+    return result
+
+def get_predicted_vectors(main_path,file1,file2,vector_true):
+    f1 = np.load(os.path.join(main_path,'matrix-pred',file1),allow_pickle=True)
+    f2 = np.load(os.path.join(main_path,'matrix-pred',file2),allow_pickle=True)
     t = turn_to_pixel(f1[0])
     [x,y] = [f2[1],f2[-1]]
-    result = {'t':t,'x':x,'y':y,'s':np.array([1,1,2/3]),'img_center':image_center}
+    result = {'t':t,'x':x,'y':y,'s':vector_true['s'],'img_center':vector_true['img_center']}
     return result
 
 # function: find a list of all center coordinate given start point and number of planes for SA stack
@@ -90,7 +97,7 @@ def find_center_list_whole_stack(start_center,n,num_a,num_b,slice_thickness):
         center_list = np.concatenate((center_list,c.reshape(1,3)))
     return center_list
 
-# function: copy image
+# function: copy 2D image (input will be 3D here since the data may be written as (x,x,1) shape)
 def copy_image(image):
     if len(image.shape) == 3:
         result = np.zeros((image.shape[0],image.shape[1],1))
@@ -103,6 +110,40 @@ def copy_image(image):
             else:
                 result[ii,jj] = image[ii,jj]
     return result
+
+# function: copy volume
+def copy_volume(image):
+    assert len(image.shape) == 3
+    result = np.zeros((image.shape[0],image.shape[1],image.shape[-1]))
+    for i in range(0,image.shape[0]):
+        for j in range(0,image.shape[1]):
+            for k in range(0,image.shape[-1]):
+                result[i,j,k] = image[i,j,k]
+    return result
+
+# function: Dice calculation
+# def DICE(seg1,seg2,target_val):
+#     p1_n,p1 = count_pixel(seg1,target_val)
+#     p2_n,p2 = count_pixel(seg2,target_val)
+#     I = 0
+#     for i in range(0,p1_n):
+#         a = p1[i]
+#         if seg2[a[0],a[1],a[-1]] == target_val:
+#             I = I +1
+#     U = p1_n + p2_n - I
+#     DSC = (2 * I)/ (p1_n+p2_n)
+#     return DSC
+
+def DICE(seg1,seg2,target_val):
+    p1_n,p1 = count_pixel(seg1,target_val)
+    p2_n,p2 = count_pixel(seg2,target_val)
+    p1_set = set([tuple(x) for x in p1])
+    p2_set = set([tuple(x) for x in p2])
+    I_set = np.array([x for x in p1_set & p2_set])
+    I = I_set.shape[0] 
+    DSC = (2 * I)/ (p1_n+p2_n)
+    return DSC
+
     
 # function: find the affine matrix for any plane in SA stack based on the basal affine matrix
 def sa_affine(plane_center,image_center,basal_vectors):
@@ -185,14 +226,14 @@ def find_all_target_files(target_file_name,main_folder):
     return F
 
 # function: color box addition
-def color_box(image):
+def color_box(image,y_range = 10, x_range = 20):
     [sx,sy] = [image.shape[0],image.shape[1]]
     new_image = np.ones((sx,sy))
     for i in range(sx):
         for j in range(sy):
             new_image[i,j] = image[i,j]
-    for j in range(sy-10,sy):
-        for i in range(sx-20,sx):
+    for j in range(sy-y_range,sy):
+        for i in range(sx-x_range,sx):
             new_image[i,j] = new_image.max()
     return new_image
 
@@ -245,16 +286,16 @@ def draw_plane_intersection(plane2_image,plane1_x,plane1_y,plane1_affine,plane2_
 
 # function: count pixel belonged to one label
 def count_pixel(seg,target_val):
-    a,b,c = seg.shape
-    count1 = 0; 
-    p1 = []; 
-    for i in range(0,a):
-        for j in range(0,b):
-            for k in range(0,c):
-                if seg[i,j,k] == target_val:
-                    count1 = count1+1
-                    p1.append([i,j,k])
-    return count1, p1
+  a,b,c = seg.shape
+  count1 = 0; 
+  p1 = []; 
+  for i in range(0,a):
+    for j in range(0,b):
+      for k in range(0,c):
+        if seg[i,j,k] == target_val:
+          count1 = count1+1
+          p1.append([i,j,k])
+  return count1, p1
 
 # function: excel write
 def xlsx_save(filepath,result,par,index_of_par):
@@ -326,6 +367,8 @@ def set_window(image,level,width):
     if len(image.shape) == 3:
         image = image.reshape(image.shape[0],image.shape[1])
 
+    new = copy_image(image)
+
     high = level + width
     low = level - width
     # normalize
@@ -337,8 +380,8 @@ def set_window(image,level,width):
             if image[i,j] < low:
                 image[i,j] = low
             norm = (image[i,j] - (low)) * unit
-            image[i,j] = norm
-    return image
+            new[i,j] = norm
+    return new
 
 
 # function: decomposite a quaterninan matrix
@@ -433,7 +476,7 @@ def find_num_of_slices_in_SAX(mpr_data,image_center,t_m,x_m,y_m,seg_m_data):
 
 
 # function: find which plane is base, mid or apex
-def particular_thirds_in_stack(a,b,num_of_section,base_no,mid_no,apex_no):
+def particular_plane_in_stack(a,b,num_of_section,base_no,mid_no,apex_no):
     '''a and b's meaning can be found in function find_num_of_slices_in_SAX'''
     start = 3
     end = a + b +1 - 2
@@ -467,4 +510,24 @@ def upsample_images(image,up_size = 1):
     new_image = interpolation(new_image).reshape(new_size[0],new_size[1],1)
     return new_image
     
+# function :re-label the segmentation:
+def relabel(raw_data,l1,l2):
+    
+    new_data = copy_volume(raw_data)
+    # find all label 1 pixel
+    _,p1 = count_pixel(new_data,l1)
+    _,p2 = count_pixel(new_data,l2)
+    
+    for p in p1:
+        new_data[p[0],p[1],p[-1]] = l2
+    for j in p2:
+        new_data[j[0],j[1],j[-1]] = l1
+    
+    return new_data
 
+# function: multiple slice view
+def show_slices(slices,colormap = "gray",origin_point = "lower"):
+    """ Function to display row of image slices """
+    fig, axes = plt.subplots(1, len(slices))
+    for i, slice in enumerate(slices):
+        axes[i].imshow(slice.T, cmap=colormap, origin=origin_point)

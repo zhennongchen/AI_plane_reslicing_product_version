@@ -22,18 +22,24 @@ dcm2niix_fld="/Users/zhennongchen/Documents/GitHub/AI_reslice_orthogonal_view/dc
 
 # define patient lists
 #readonly PATIENTS=(/Volumes/McVeighLab/wip/ucsd_lvad/to_be_reviewed/CVC1709271428/)
-readonly PATIENTS=(/Volumes/McVeighLab/projects/Zhennong/AUH_patients/Original_dicoms/1_pre/)
+#readonly PATIENTS=(/Volumes/McVeighLab/projects/Zhennong/AUH_patients/Original_dicoms/1_post/)
+#readonly PATIENTS=(/Users/zhennongchen/Documents/Zhennong_CT_Data/AUH/1/1_post/ )
+readonly PATIENTS=(/Users/zhennongchen/Downloads/test/tt/ )
 
+# define image folder
+img_fld="img_sorted"
 
 for p in ${PATIENTS[*]};
 do
 
   echo ${p}
   
-  if [ -d ${p}img-dcm ];
+  if [ -d ${p}${img_fld} ];
   then
 
-  output="/Volumes/McVeighLab/projects/Zhennong/AUH_patients/Converted_nii" # different directory from raw data
+  #output="/Volumes/McVeighLab/projects/Zhennong/AUH_patients/nii_images" # different directory from raw data
+  #output="/Users/zhennongchen/Documents/Zhennong_CT_Data/AUH/nii_images"
+  output="/Users/zhennongchen/Downloads/test/nii_images"
   mkdir -p ${output}/$(basename ${p})/
   mkdir -p ${output}/$(basename ${p})/img-nii/
 
@@ -44,7 +50,7 @@ do
     continue
   fi
 
-  IMGS=(${p}img-dcm-sorted/*/)
+  IMGS=(${p}${img_fld}/*/)
   
   for i in $(seq 0 $(( ${#IMGS[*]} - 1 )));
       do
