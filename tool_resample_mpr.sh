@@ -27,6 +27,7 @@ readonly PATIENT=( ${DATA_DIR}*/)
 SLICE[0]=2C
 SLICE[1]=3C
 SLICE[2]=4C
+SLICE[3]=BASAL
 
 
 # Folder where you want to put the reslice

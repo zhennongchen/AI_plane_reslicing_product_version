@@ -6,6 +6,7 @@ import os
 
 # Third Party
 import numpy as np
+import math
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras import backend as K
 from keras.models import Model
@@ -136,6 +137,6 @@ for task_num in task_num_list:
       x_n = ff.normalize(x_pred)
       y_n = ff.normalize(y_pred)
       matrix = np.concatenate((t_pred.reshape(1,3),x_n.reshape(1,3),y_n.reshape(1,3)))
-      save_path = os.path.join(p,'vector-pred','pred_'+task_list[task_num]+'_')
+      save_path = os.path.join(p,'vector-pred','pred_'+task_list[task_num])
       os.makedirs(os.path.dirname(save_path), exist_ok = True)
       np.save(save_path,matrix)

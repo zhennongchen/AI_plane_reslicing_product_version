@@ -21,6 +21,7 @@ readonly PATIENTS=(/Volumes/mcveighlab_01/Zhennong_AI_dataset/patients_for_movie
 SLICE[0]=2C
 SLICE[1]=3C
 SLICE[2]=4C
+SLICE[3]=BASAL
 
 # define image folder
 img_fld="mpr-dcm-zc"
