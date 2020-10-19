@@ -10,8 +10,9 @@ import supplement
 from PIL import Image
 cg = supplement.Experiment()
 
-scale = [1,1,0.67]
 
+scale = [1.0,1.0,0.67]
+zoom_factor = 1.2 # in case the background in the plane is too large 
 # define patient:
 patient = 'CVC1908280929'
 
@@ -20,7 +21,7 @@ native_res = 1
 
 # define plane dimension:
 if native_res == 1:
-    plane_dim = [480,480,1]
+    plane_dim = [440,440,1]
 else:
     plane_dim = [160,160,1]
 
@@ -36,14 +37,19 @@ volume_data = volume.get_fdata()
 img_center=np.array([(volume_data.shape[0]-1)/2,(volume_data.shape[1]-1)/2,(volume_data.shape[-1]-1)/2])
 
 # define vectors:
-#vector = ff.get_predicted_vectors(os.path.join(cg.patient_dir,patient,'vector-pred/pred_4C_t.npy'),os.path.join(cg.patient_dir,patient,'vector-pred/pred_4C_r.npy'),scale, img_center)
-vector = ff.get_ground_truth_vectors_product_v(os.path.join(cg.patient_dir,patient,'vector-manual/manual_2C_high.npy'))
-#if native_res == 1:
-#    vector = ff.adapt_reslice_vector_for_native_resolution(vector,os.path.join(cg.patient_dir,patient,'img-nii-sm','0.nii.gz'),os.path.join(cg.patient_dir,patient,'img-nii','0.nii.gz'))
+vector = ff.get_predicted_vectors(os.path.join(cg.patient_dir,patient,'vector-pred/pred_4C_t.npy'),os.path.join(cg.patient_dir,patient,'vector-pred/pred_4C_r.npy'),scale, img_center)
+#vector = ff.get_ground_truth_vectors_product_v(os.path.join(cg.patient_dir,patient,'vector-manual/manual_2C_high.npy'))
+if native_res == 1:
+    vector = ff.adapt_reslice_vector_for_native_resolution(vector,os.path.join(cg.patient_dir,patient,'img-nii-sm','0.nii.gz'),os.path.join(cg.patient_dir,patient,'img-nii','0.nii.gz'))
+    scale = ff.set_scale_for_unequal_x_and_y(vector)
+    print(vector['s'],scale)
 
 # re-slice
 interpolation = ff.define_interpolation(volume_data,Fill_value = volume_data.min(),Method='linear')
-plane = ff.reslice_mpr(np.zeros(plane_dim),img_center + vector['t'], ff.normalize(vector['x']), ff.normalize(vector['y']),1,1,interpolation)
+if vector['s'][0] >= vector['s'][1]: # in native resolution, the scale is not like the mpr in low resolution (with x:y = 1:1)
+    plane = ff.reslice_mpr(np.zeros(plane_dim),img_center + vector['t'], ff.normalize(vector['x']), ff.normalize(vector['y']),scale[0]/zoom_factor,scale[1]/zoom_factor,interpolation)
+else:
+    plane = ff.reslice_mpr(np.zeros(plane_dim),img_center + vector['t'], ff.normalize(vector['x']), ff.normalize(vector['y']),scale[0]/zoom_factor,scale[1]/zoom_factor,interpolation)
 
 # set WL,WW and orient
 WL = 500

@@ -22,7 +22,7 @@ export CG_MAIN_DIR="/Data/McVeighLabSuper/projects/Zhennong/AI/"
 
 # enter the name of directory where you save the patient data
 #export CG_PATIENT_DIR="${CG_MAIN_DIR}Zhennong_WMA_Movie_dataset/"
-export CG_PATIENT_DIR="${CG_MAIN_DIR}Zhennong_AN_dataset/"
+export CG_PATIENT_DIR="${CG_MAIN_DIR}Zhennong_AN_dataset"
 
 # enter the name of folder where you save the trained deep learning model 
 export CG_MODEL_DIR="/Data/McVeighLabSuper/projects/Zhennong/AI/CNN/all-classes-all-phases-data-1.5/" 

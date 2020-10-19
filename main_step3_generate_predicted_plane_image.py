@@ -12,7 +12,7 @@ from PIL import Image
 cg = supplement.Experiment()
 
 WL = 500
-WW = 900
+WW = 800
 native_res = 1
 if native_res == 1:
     plane_image_size = [480,480,1]
@@ -20,23 +20,27 @@ else:
     plane_image_size = [160,160,1]
 
 scale = [1,1,0.67]
+zoom_factor = 1 # in case the background in the plane is too large 
 
 
 # function to make the image
-def plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list):
+def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list):
     
     # define interpolation matrix
     inter = ff.define_interpolation(volume_data,Fill_value=volume_data.min(),Method='linear')
     
     # reslice long axis
-    twoc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_2C['t'],vector_2C['x'],vector_2C['y'],1,1,inter)
-    threec = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_3C['t'],vector_3C['x'],vector_3C['y'],1,1,inter)
-    fourc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_4C['t'],vector_4C['x'],vector_4C['y'],1,1,inter)
+    twoc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_2C['t'],vector_2C['x'],vector_2C['y'],vector_2C['s'][0]/zoom_factor,vector_2C['s'][1]/zoom_factor,inter)
+    threec = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_3C['t'],vector_3C['x'],vector_3C['y'],vector_3C['s'][0]/zoom_factor,vector_3C['s'][1]/zoom_factor,inter)
+    fourc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_4C['t'],vector_4C['x'],vector_4C['y'],vector_4C['s'][0]/zoom_factor,vector_4C['s'][1]/zoom_factor,inter)
 
     # reslice short axis
     sax_collection = []
     for i in range(0,9):
-        sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],1,1,inter))
+        if i < 11:
+            sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter))
+        else:
+            sax_collection.append(ff.reslice_mpr(np.zeros([480,700,1]),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter))
     assert len(sax_collection) == 9
 
     # normalize by WL and WW and then orient
@@ -46,8 +50,8 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vecto
 
     sax_collection_n = []
     for ii in range(0,9):
-        s_n = ff.set_window(sax_collection[ii],WL,WW); s_n = s_n.T
-        sax_collection_n.append(s_n)
+            s_n = ff.set_window(sax_collection[ii][0:480,0:480,:],WL,WW); s_n = s_n.T
+            sax_collection_n.append(s_n)
     
 
     # make image
@@ -71,7 +75,7 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vecto
 
 
 # main function for image
-patient_list = ff.find_all_target_files(['*'],cg.patient_dir)
+patient_list = ff.find_all_target_files(['AN111_*','AN112_*'],cg.patient_dir)
 for patient in patient_list:
     patient_id = os.path.basename(patient)
     patient_class = os.path.basename(os.path.dirname(patient))
@@ -97,17 +101,16 @@ for patient in patient_list:
     t_file = open(os.path.join(patient,"slice_num_info.txt"),"w+")
     t_file.write("num of slices before basal = %d\nnum of slices after basal = %d" % (a, b))
     t_file.close()
-    print(a,b)
 
-
-    # transfer translation vector into native res:
+    # transfer vector into native res:
     if native_res == 1:
-        # get native res:
-        vector_2C = ff.adapt_reslice_vector_for_native_resolution(vector_2C,os.path.join(patient,'img-nii-sm/0.nii.gz'),os.path.join(patient,'img-nii/0.nii.gz'))
-        vector_3C = ff.adapt_reslice_vector_for_native_resolution(vector_3C,os.path.join(patient,'img-nii-sm/0.nii.gz'),os.path.join(patient,'img-nii/0.nii.gz'))
-        vector_4C = ff.adapt_reslice_vector_for_native_resolution(vector_4C,os.path.join(patient,'img-nii-sm/0.nii.gz'),os.path.join(patient,'img-nii/0.nii.gz'))
-        vector_SA = ff.adapt_reslice_vector_for_native_resolution(vector_SA,os.path.join(patient,'img-nii-sm/0.nii.gz'),os.path.join(patient,'img-nii/0.nii.gz'))
-        
+        V = []
+        for v in [vector_2C,vector_3C,vector_4C,vector_SA]:
+            v = ff.adapt_reslice_vector_for_native_resolution(v,os.path.join(patient,'img-nii-sm/0.nii.gz'),os.path.join(patient,'img-nii/0.nii.gz'))
+            v['s'] = ff.set_scale_for_unequal_x_and_y(v)
+            V.append(v)
+        [vector_2C,vector_3C,vector_4C,vector_SA] = [V[0],V[1],V[2],V[3]] 
+
         volume_dim = nib.load(os.path.join(patient,'img-nii/0.nii.gz')).shape
         image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2])
 
@@ -115,7 +118,6 @@ for patient in patient_list:
     if native_res == 1:
         pix_dim = ff.get_voxel_size(os.path.join(patient,'img-nii/0.nii.gz'))
         pix_size = ff.length(pix_dim)
-        print(pix_size)
         normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
         center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
     else:
@@ -123,7 +125,6 @@ for patient in patient_list:
 
     # get the index of each planes of 9-plane SAX stack
     index_list,center_list9 = ff.resample_SAX_stack_into_particular_num_of_planes(range(2,center_list.shape[0]),9,center_list)
-    print(range(2,center_list.shape[0]),index_list)
 
     # reslice mpr for every time frame
     if native_res == 1:
@@ -136,7 +137,7 @@ for patient in patient_list:
         volume_data = volume.get_fdata()
         time = ff.find_timeframe(v,2)
         save_path = os.path.join(save_folder,str(time) +'.png')
-        plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list9)
+        plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list9)
         print('finish time '+str(time))
 
     # make the movie

@@ -37,16 +37,17 @@ model_3C_t = 'model_batch3/model-U2_batch3_3C_t-034-*'
 model_3C_r = 'model_batch4/model-U2_batch4_3C_r-032-*'
 model_4C_t = 'model_batch4/model-U2_batch4_4C_t-031-*'
 model_4C_r = 'model_batch4/model-U2_batch4_4C_r-040-*'
-model_BASAL_t = 'model_batch2/model-U2_batch2_BASAL_t-032-*'
-model_BASAL_r = 'model_batch1/model-U2_batch1_BASAL_r-018-*'
+model_BASAL_t = 'model_batch1/model-U2_batch1_BASAL_t-030-*'
+model_BASAL_r = 'model_batch3/model-U2_batch3_BASAL_r-040-*'
 MODEL = [model_s,model_2C_t,model_2C_r,model_3C_t,model_3C_r,model_4C_t,model_4C_r,model_BASAL_t,model_BASAL_r]
 
 # prediction task list
 task_list = ['s','2C_t','2C_r','3C_t','3C_r','4C_t','4C_r','BASAL_t','BASAL_r'] 
-task_num_list = [0,1,2,3,4,5,6,7,8] 
+task_num_list = [8] 
 
 # define patient CT image list
-patient_list = ff.find_all_target_files(['*'],cg.patient_dir)
+patient_list = ff.find_all_target_files(['CVC1908280929'],cg.patient_dir)
+print(patient_list)
 print('finish loading all patient images')
 
 # build the model
@@ -108,35 +109,35 @@ for task_num in task_num_list:
       time_frame = ff.find_timeframe(img,2)
       print(time_frame)
 
-    # build the predict_generator
-    u_pred,t_pred,x_pred,y_pred= model.predict_generator(valgen.predict_flow(np.asarray([img]),
-        batch_size = cg.batch_size,
-        view = view,
-        relabel_LVOT = cg.relabel_LVOT,
-        input_adapter = ut.in_adapt,
-        output_adapter = ut.out_adapt,
-        shape = cg.dim,
-        input_channels = 1,
-        output_channels = cg.num_classes,),
-        verbose = 1,
-        steps = 1,)
+      # build the predict_generator
+      u_pred,t_pred,x_pred,y_pred= model.predict_generator(valgen.predict_flow(np.asarray([img]),
+          batch_size = cg.batch_size,
+          view = view,
+          relabel_LVOT = cg.relabel_LVOT,
+          input_adapter = ut.in_adapt,
+          output_adapter = ut.out_adapt,
+          shape = cg.dim,
+          input_channels = 1,
+          output_channels = cg.num_classes,),
+          verbose = 1,
+          steps = 1,)
 
-    # save u_net segmentation
-    if task_list[task_num] == 's':
-      u_gt_nii = nb.load(img)
-      u_pred = np.argmax(u_pred[0], axis = -1).astype(np.uint8)
-      u_pred = dv.crop_or_pad(u_pred, u_gt_nii.get_data().shape)
-      u_pred[u_pred == 3] = 4
-      u_pred = nb.Nifti1Image(u_pred, u_gt_nii.affine)
-      save_path = os.path.join(p,'seg-pred','pred_'+task_list[task_num]+'_'+os.path.basename(img))
-      os.makedirs(os.path.dirname(save_path),exist_ok = True)
-      nb.save(u_pred, save_path)
-  
-  # save vectors
-    if task_list[task_num] != 's':
-      x_n = ff.normalize(x_pred)
-      y_n = ff.normalize(y_pred)
-      matrix = np.concatenate((t_pred.reshape(1,3),x_n.reshape(1,3),y_n.reshape(1,3)))
-      save_path = os.path.join(p,'vector-pred','pred_'+task_list[task_num])
-      os.makedirs(os.path.dirname(save_path), exist_ok = True)
-      np.save(save_path,matrix)
+      # save u_net segmentation
+      if task_list[task_num] == 's':
+        u_gt_nii = nb.load(img)
+        u_pred = np.argmax(u_pred[0], axis = -1).astype(np.uint8)
+        u_pred = dv.crop_or_pad(u_pred, u_gt_nii.get_data().shape)
+        u_pred[u_pred == 3] = 4
+        u_pred = nb.Nifti1Image(u_pred, u_gt_nii.affine)
+        save_path = os.path.join(p,'seg-pred','pred_'+task_list[task_num]+'_'+os.path.basename(img))
+        os.makedirs(os.path.dirname(save_path),exist_ok = True)
+        nb.save(u_pred, save_path)
+    
+    # save vectors
+      if task_list[task_num] != 's':
+        x_n = ff.normalize(x_pred)
+        y_n = ff.normalize(y_pred)
+        matrix = np.concatenate((t_pred.reshape(1,3),x_n.reshape(1,3),y_n.reshape(1,3)))
+        save_path = os.path.join(p,'vector-pred','pred_'+task_list[task_num])
+        os.makedirs(os.path.dirname(save_path), exist_ok = True)
+        np.save(save_path,matrix)

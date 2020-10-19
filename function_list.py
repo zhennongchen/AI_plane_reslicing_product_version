@@ -500,12 +500,27 @@ def adapt_reslice_vector_for_native_resolution(vector,volume_file_low,volume_fil
     dim_low = get_voxel_size(volume_file_low)
     dim_native = get_voxel_size(volume_file_native) 
     # adapt direction vectors:
-    vector['x'] = normalize(convert_coordinates(A_native,A_low,vector['x']) - convert_coordinates(A_native,A_low,[0,0,0]))
-    vector['y'] = normalize(convert_coordinates(A_native,A_low,vector['y']) - convert_coordinates(A_native,A_low,[0,0,0]))
+    vector['x'] = convert_coordinates(A_native,A_low,vector['x']) - convert_coordinates(A_native,A_low,[0,0,0])
+    vector['y'] = convert_coordinates(A_native,A_low,vector['y']) - convert_coordinates(A_native,A_low,[0,0,0])
+
+    vector['s'] = np.array([length(vector['x']),length(vector['y'])])
+
+    vector['x'] = normalize(vector['x'])
+    vector['y'] = normalize(vector['y'])
     # adapt translation vector
     t_low = vector['t']
     vector['t'] = np.asarray([t_low[i] * dim_low[i] / dim_native[i] for i in range(0,t_low.shape[0])])
     return vector
+
+# function: set scale for plane re-slicing in the case in which x and y scale are not the same (=1 for both)
+# the value of scale_x and scale_y doesn't matter since it just influences the zoom of the image
+# what matters is the ratio of scale_x and y
+def set_scale_for_unequal_x_and_y(vector,zoom_factor = 1):
+    if vector['s'][0] >= vector['s'][1]:
+        return np.array([1.0/zoom_factor,1.0/vector['s'][0]*vector['s'][1]/zoom_factor])
+    else:
+        return np.array([1.0/vector['s'][1]*vector['s'][0]/zoom_factor,1.0/zoom_factor])
+        
 
 # function: make movies of several .png files
 def make_movies(save_path,pngs,fps):

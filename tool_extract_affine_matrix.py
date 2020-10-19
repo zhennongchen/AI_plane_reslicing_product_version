@@ -44,14 +44,21 @@ def get_vectors(i,j,i_affine,j_affine): #i=img,j=mpr
     y_scale = np.linalg.norm(y_d)
     y_n = np.asarray([i/y_scale for i in y_d])
 
+    # z_direction
+    z_d = ff.convert_coordinates(i_affine,j_affine,z1) - ff.convert_coordinates(i_affine,j_affine,o)
+    z_scale = np.linalg.norm(z_d)
+    z_n = np.asarray([i/z_scale for i in z_d])
+
 
     # scale
     x_s = ff.length(x_d)/1
     y_s = ff.length(y_d)/1 
-    scale = np.array([x_s,y_s])
+    z_s = ff.length(z_d)/1
+    scale = np.array([x_s,y_s,z_s])
+    print(scale)
 
     # vectors:
-    vectors=np.array([translation_c, translation_c_n, x_n, y_n, img_center])
+    vectors=np.array([translation_c, translation_c_n, x_n, y_n, z_n,img_center,scale])
     return vectors
 
 
@@ -91,6 +98,6 @@ for p in patient_list:
         
         matrix=get_vectors(i,j,i_affine,j_affine)
 
-        np.save(os.path.join(save_folder,'manual_'+chamber+'_high'),matrix)
+        #np.save(os.path.join(save_folder,'manual_'+chamber),matrix)
         
         
