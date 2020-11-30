@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# this script generates image with three LAX planes + A SAX stack
+# this script generates image with three LAX planes + A SAX stack - in low res
 
 import function_list as ff
 import os
@@ -11,7 +11,7 @@ from PIL import Image
 cg = supplement.Experiment()
 
 WL = 500
-WW = 900
+WW = 800
 plane_image_size = [160,160,1]
 scale = [1,1,0.67]
 
@@ -89,9 +89,6 @@ for patient in patient_list:
     # get the centerpoint list of SAX stack
     normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
     center_list = ff.find_center_list(img_center + vector_SA['t'],-normal_vector,9,8)
-
-    
-    
     
     # reslice mpr for every time frame
     volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-sm/*.nii.gz'],patient),2)

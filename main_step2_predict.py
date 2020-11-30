@@ -37,16 +37,16 @@ model_3C_t = 'model_batch3/model-U2_batch3_3C_t-034-*'
 model_3C_r = 'model_batch4/model-U2_batch4_3C_r-032-*'
 model_4C_t = 'model_batch4/model-U2_batch4_4C_t-031-*'
 model_4C_r = 'model_batch4/model-U2_batch4_4C_r-040-*'
-model_BASAL_t = 'model_batch1/model-U2_batch1_BASAL_t-030-*'
-model_BASAL_r = 'model_batch3/model-U2_batch3_BASAL_r-040-*'
+model_BASAL_t = 'model_batch2/model-U2_batch2_BASAL_t-032-*'
+model_BASAL_r = 'model_batch1/model-U2_batch1_BASAL_r-018-*'
 MODEL = [model_s,model_2C_t,model_2C_r,model_3C_t,model_3C_r,model_4C_t,model_4C_r,model_BASAL_t,model_BASAL_r]
 
 # prediction task list
 task_list = ['s','2C_t','2C_r','3C_t','3C_r','4C_t','4C_r','BASAL_t','BASAL_r'] 
-task_num_list = [8] 
+task_num_list = [0]
 
 # define patient CT image list
-patient_list = ff.find_all_target_files(['CVC1908280929'],cg.patient_dir)
+patient_list = ff.find_all_target_files(['*'],cg.patient_dir)
 print(patient_list)
 print('finish loading all patient images')
 
@@ -101,7 +101,7 @@ for task_num in task_num_list:
 
     # find the input images for all time frames:
     if task_list[task_num] == 's':
-      img_list = ff.find_all_target_files(['img-nii-sm/0.nii.gz'],p)
+      img_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-sm/*.nii.gz'],p),2)
     else:
       img_list = ff.find_all_target_files(['img-nii-sm/0.nii.gz'],p)
 

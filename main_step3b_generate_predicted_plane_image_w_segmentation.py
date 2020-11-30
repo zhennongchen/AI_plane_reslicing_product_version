@@ -24,7 +24,7 @@ zoom_factor = 1 # in case the background in the plane is too large
 
 
 # function to make the image
-def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list):
+def plane_image(save_path,volume_data,segmentation_data, plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list):
     
     # define interpolation matrix
     inter = ff.define_interpolation(volume_data,Fill_value=volume_data.min(),Method='linear')
@@ -43,6 +43,7 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
             sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter))
     assert len(sax_collection) == 9
 
+
     # normalize by WL and WW and then orient
     twoc_n = ff.set_window(twoc,WL,WW); twoc_n = np.flip(twoc_n.T,0)
     threec_n = ff.set_window(threec,WL,WW); threec_n = np.flip(threec_n.T,0)
@@ -50,42 +51,67 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
 
     sax_collection_n = []
     for ii in range(0,9):
-            s_n = ff.set_window(sax_collection[ii],WL,WW); s_n = s_n.T
-            sax_collection_n.append(s_n)
+        s_n = ff.set_window(sax_collection[ii],WL,WW); s_n = s_n.T
+        sax_collection_n.append(s_n)
+
+    # put segmentation onto the image
+    inter_seg = ff.define_interpolation(segmentation_data,Fill_value=0,Method = 'nearest')
+    twoc_seg = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_2C['t'],vector_2C['x'],vector_2C['y'],vector_2C['s'][0]/zoom_factor,vector_2C['s'][1]/zoom_factor,inter_seg)
+    twoc_seg = ff.overlay_segmentation_onto_image(twoc,twoc_seg,1)
+    threec_seg = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_3C['t'],vector_3C['x'],vector_3C['y'],vector_3C['s'][0]/zoom_factor,vector_3C['s'][1]/zoom_factor,inter_seg)
+    threec_seg = ff.overlay_segmentation_onto_image(threec,threec_seg,1)
+    fourc_seg = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_4C['t'],vector_4C['x'],vector_4C['y'],vector_4C['s'][0]/zoom_factor,vector_4C['s'][1]/zoom_factor,inter_seg)
+    fourc_seg = ff.overlay_segmentation_onto_image(fourc,fourc_seg,1)
+
+    sax_seg_collection = []
+    for i in range(0,9):
+        sax_seg = ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter_seg)
+        sax_seg = ff.overlay_segmentation_onto_image(sax_collection[i],sax_seg,1)
+        sax_seg_collection.append(sax_seg)
     
+    # normalize by WL and WW and then orient
+    twoc_seg_n = ff.set_window(twoc_seg,WL,WW); twoc_seg_n = np.flip(twoc_seg_n.T,0)
+    threec_seg_n = ff.set_window(threec_seg,WL,WW); threec_seg_n = np.flip(threec_seg_n.T,0)
+    fourc_seg_n = ff.set_window(fourc_seg,WL,WW); fourc_seg_n = np.flip(fourc_seg_n.T,0)
+
+    sax_seg_collection_n = []
+    for ii in range(0,9):
+        s_seg_n = ff.set_window(sax_seg_collection[ii],WL,WW); s_seg_n = s_seg_n.T
+        sax_seg_collection_n.append(s_seg_n)
+
 
     # make image
     [h,w,d] = plane_image_size
     I = np.zeros((h*3,w*4,3))
-    I[0:h,0:w,0] = twoc_n; I[0:h,0:w,1] = twoc_n; I[0:h,0:w,2] = twoc_n
-    I[h:h*2,0:w,0] = threec_n; I[h:h*2,0:w,1] = threec_n; I[h:h*2,0:w,2] = threec_n
-    I[h*2:h*3,0:w,0] = fourc_n; I[h*2:h*3,0:w,1] = fourc_n; I[h*2:h*3,0:w,2] = fourc_n
-    I[0:h,w:w*2,0] = sax_collection_n[0]; I[0:h,w:w*2,1] = sax_collection_n[0]; I[0:h,w:w*2,2] = sax_collection_n[0]
-    I[0:h,w*2:w*3,0] = sax_collection_n[1]; I[0:h,w*2:w*3,1] = sax_collection_n[1]; I[0:h,w*2:w*3,2] = sax_collection_n[1]
-    I[0:h,w*3:w*4,0] = sax_collection_n[2]; I[0:h,w*3:w*4,1] = sax_collection_n[2]; I[0:h,w*3:w*4,2] = sax_collection_n[2]
-    I[h:h*2,w:w*2,0] = sax_collection_n[3]; I[h:h*2,w:w*2,1] = sax_collection_n[3]; I[h:h*2,w:w*2,2] = sax_collection_n[3]
-    I[h:h*2,w*2:w*3,0] = sax_collection_n[4]; I[h:h*2,w*2:w*3,1] = sax_collection_n[4]; I[h:h*2,w*2:w*3,2] = sax_collection_n[4]
-    I[h:h*2,w*3:w*4,0] = sax_collection_n[5]; I[h:h*2,w*3:w*4,1] = sax_collection_n[5]; I[h:h*2,w*3:w*4,2] = sax_collection_n[5]
-    I[h*2:h*3,w:w*2,0] = sax_collection_n[6]; I[h*2:h*3,w:w*2,1] = sax_collection_n[6]; I[h*2:h*3,w:w*2,2] = sax_collection_n[6]
-    I[h*2:h*3,w*2:w*3,0] = sax_collection_n[7]; I[h*2:h*3,w*2:w*3,1] = sax_collection_n[7]; I[h*2:h*3,w*2:w*3,2] = sax_collection_n[7]
-    I[h*2:h*3,w*3:w*4,0] = sax_collection_n[8]; I[h*2:h*3,w*3:w*4,1] = sax_collection_n[8]; I[h*2:h*3,w*3:w*4,2] = sax_collection_n[8]
+    I[0:h,0:w,0] = twoc_seg_n; I[0:h,0:w,1] = twoc_n; I[0:h,0:w,2] = twoc_n
+    I[h:h*2,0:w,0] = threec_seg_n; I[h:h*2,0:w,1] = threec_n; I[h:h*2,0:w,2] = threec_n
+    I[h*2:h*3,0:w,0] = fourc_seg_n; I[h*2:h*3,0:w,1] = fourc_n; I[h*2:h*3,0:w,2] = fourc_n
+    I[0:h,w:w*2,0] = sax_seg_collection_n[0]; I[0:h,w:w*2,1] = sax_collection_n[0]; I[0:h,w:w*2,2] = sax_collection_n[0]
+    I[0:h,w*2:w*3,0] = sax_seg_collection_n[1]; I[0:h,w*2:w*3,1] = sax_collection_n[1]; I[0:h,w*2:w*3,2] = sax_collection_n[1]
+    I[0:h,w*3:w*4,0] = sax_seg_collection_n[2]; I[0:h,w*3:w*4,1] = sax_collection_n[2]; I[0:h,w*3:w*4,2] = sax_collection_n[2]
+    I[h:h*2,w:w*2,0] = sax_seg_collection_n[3]; I[h:h*2,w:w*2,1] = sax_collection_n[3]; I[h:h*2,w:w*2,2] = sax_collection_n[3]
+    I[h:h*2,w*2:w*3,0] = sax_seg_collection_n[4]; I[h:h*2,w*2:w*3,1] = sax_collection_n[4]; I[h:h*2,w*2:w*3,2] = sax_collection_n[4]
+    I[h:h*2,w*3:w*4,0] = sax_seg_collection_n[5]; I[h:h*2,w*3:w*4,1] = sax_collection_n[5]; I[h:h*2,w*3:w*4,2] = sax_collection_n[5]
+    I[h*2:h*3,w:w*2,0] = sax_seg_collection_n[6]; I[h*2:h*3,w:w*2,1] = sax_collection_n[6]; I[h*2:h*3,w:w*2,2] = sax_collection_n[6]
+    I[h*2:h*3,w*2:w*3,0] = sax_seg_collection_n[7]; I[h*2:h*3,w*2:w*3,1] = sax_collection_n[7]; I[h*2:h*3,w*2:w*3,2] = sax_collection_n[7]
+    I[h*2:h*3,w*3:w*4,0] = sax_seg_collection_n[8]; I[h*2:h*3,w*3:w*4,1] = sax_collection_n[8]; I[h*2:h*3,w*3:w*4,2] = sax_collection_n[8]
 
     # save
     Image.fromarray((I * 255).astype('uint8')).save(save_path)
 
 
 # main function for image
-patient_list = ff.find_all_target_files(['AN42*'],cg.patient_dir)
+patient_list = ff.find_all_target_files(['CVC191114*'],cg.patient_dir)
 for patient in patient_list:
     patient_id = os.path.basename(patient)
     patient_class = os.path.basename(os.path.dirname(patient))
     print(patient_class,patient_id)
 
     # define save_folder
-    save_folder = os.path.join(patient,'planes_pred_high_res')
+    save_folder = os.path.join(patient,'planes_pred_high_res_w_seg')
     ff.make_folder([save_folder])
 
-    seg = nib.load(os.path.join(patient,'seg-pred/pred_s_0.nii.gz')); seg_data = seg.get_fdata()
+    seg_low = nib.load(os.path.join(patient,'seg-manual-1.5/0.nii.gz')); seg_low_data = seg_low.get_fdata()
     volume_dim = nib.load(os.path.join(patient,'img-nii-sm/0.nii.gz')).shape
     image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
 
@@ -97,7 +123,7 @@ for patient in patient_list:
 
     # define plane num for SAX stack:
     normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
-    a,b = ff.find_num_of_slices_in_SAX(np.zeros([160,160,1]),image_center,vector_SA['t'],vector_SA['x'],vector_SA['y'],seg_data,2.59)
+    a,b = ff.find_num_of_slices_in_SAX(np.zeros([160,160,1]),image_center,vector_SA['t'],vector_SA['x'],vector_SA['y'],seg_low_data,2.59)
     t_file = open(os.path.join(patient,"slice_num_info.txt"),"w+")
     t_file.write("num of slices before basal = %d\nnum of slices after basal = %d" % (a, b))
     t_file.close()
@@ -128,7 +154,7 @@ for patient in patient_list:
 
     # reslice mpr for every time frame
     if native_res == 1:
-        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii/*.nii.gz'],patient),2)
+        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii/0.nii.gz'],patient),2)
     else:
         volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-sm/*.nii.gz'],patient),2)
 
@@ -137,7 +163,9 @@ for patient in patient_list:
         volume_data = volume.get_fdata()
         time = ff.find_timeframe(v,2)
         save_path = os.path.join(save_folder,str(time) +'.png')
-        plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list9)
+        segmentation = nib.load(os.path.join(patient,'seg-manual',str(time)+'.nii.gz'))
+        segmentation = segmentation.get_fdata()
+        plane_image(save_path,volume_data,segmentation,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list9)
         print('finish time '+str(time))
 
     # # make the movie

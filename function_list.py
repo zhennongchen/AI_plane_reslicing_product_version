@@ -504,6 +504,8 @@ def adapt_reslice_vector_for_native_resolution(vector,volume_file_low,volume_fil
     vector['y'] = convert_coordinates(A_native,A_low,vector['y']) - convert_coordinates(A_native,A_low,[0,0,0])
 
     vector['s'] = np.array([length(vector['x']),length(vector['y'])])
+    # also find the scale of vectors that can be used to reslice on orignial CT volume
+    vector['final_s'] = np.array([vector['s'][0]/dim_low[0]*dim_native[0], vector['s'][1]/dim_low[1]*dim_native[1]])
 
     vector['x'] = normalize(vector['x'])
     vector['y'] = normalize(vector['y'])
@@ -511,6 +513,7 @@ def adapt_reslice_vector_for_native_resolution(vector,volume_file_low,volume_fil
     t_low = vector['t']
     vector['t'] = np.asarray([t_low[i] * dim_low[i] / dim_native[i] for i in range(0,t_low.shape[0])])
     return vector
+
 
 # function: set scale for plane re-slicing in the case in which x and y scale are not the same (=1 for both)
 # the value of scale_x and scale_y doesn't matter since it just influences the zoom of the image
@@ -520,8 +523,9 @@ def set_scale_for_unequal_x_and_y(vector,zoom_factor = 1):
         return np.array([1.0/zoom_factor,1.0/vector['s'][0]*vector['s'][1]/zoom_factor])
     else:
         return np.array([1.0/vector['s'][1]*vector['s'][0]/zoom_factor,1.0/zoom_factor])
-        
 
+
+    
 # function: make movies of several .png files
 def make_movies(save_path,pngs,fps):
     mpr_array=[]
@@ -588,7 +592,18 @@ def read_DicomDataset(dataset,elements):
             result.append(dataset[i].value)
         else:
             result.append('')
-    return result
+    return 
+    
+# function: put segmentation onto volume
+def overlay_segmentation_onto_image(img,seg,target_val):
+    _,pixels = count_pixel(seg,target_val)
+    new_img = np.copy(img)
+    for p in pixels:
+        new_img[p[0],p[1],p[-1]] = new_img.max()
+    return new_img
+    
+    
+    
 
 
     

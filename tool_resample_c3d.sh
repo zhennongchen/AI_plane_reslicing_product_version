@@ -7,7 +7,7 @@
 
 
 # Get a list of patients.
-readonly patients=( ${CG_PATIENT_DIR}*/ ) 
+readonly patients=( ${CG_PATIENT_DIR}AN51_*/ ) 
 
 img_or_seg=1 # 1 is image, 0 is seg
 
