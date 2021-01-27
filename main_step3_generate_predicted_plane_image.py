@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # this script generates image with three LAX planes + A SAX stack
+# for unknown reason, it can not be run in docker cuda_100_all_collection but can only run in Docker_AI_plane
 
 import function_list as ff
 import os
@@ -37,10 +38,7 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
     # reslice short axis
     sax_collection = []
     for i in range(0,9):
-        if i < 11:
-            sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter))
-        else:
-            sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter))
+        sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter))
     assert len(sax_collection) == 9
 
     # normalize by WL and WW and then orient
@@ -75,81 +73,117 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
 
 
 # main function for image
-patient_list = ff.find_all_target_files(['AN42*'],cg.patient_dir)
-for patient in patient_list:
-    patient_id = os.path.basename(patient)
-    patient_class = os.path.basename(os.path.dirname(patient))
-    print(patient_class,patient_id)
+patient_list = ff.find_all_target_files(['Abnormal/CVC1901241202','Normal/td'],cg.save_dir)
+# define which segmentation prediction batch will be used
+batch_seg = 0
 
-    # define save_folder
-    save_folder = os.path.join(patient,'planes_pred_high_res')
-    ff.make_folder([save_folder])
+for batch in range(1,2):
+    for patient in patient_list:
+        patient_id = os.path.basename(patient)
+        patient_class = os.path.basename(os.path.dirname(patient))
+        print(patient_class,patient_id)
 
-    seg = nib.load(os.path.join(patient,'seg-pred/pred_s_0.nii.gz')); seg_data = seg.get_fdata()
-    volume_dim = nib.load(os.path.join(patient,'img-nii-sm/0.nii.gz')).shape
-    image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
+        save_folder = os.path.join(patient,'planes_pred/batch_'+str(batch))
+        ff.make_folder([os.path.dirname(save_folder),save_folder])
 
-    # load vectors
-    vector_2C = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/pred_2C_t.npy'),os.path.join(patient,'vector-pred/pred_2C_r.npy'),scale, image_center)
-    vector_3C = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/pred_3C_t.npy'),os.path.join(patient,'vector-pred/pred_3C_r.npy'),scale, image_center)
-    vector_4C = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/pred_4C_t.npy'),os.path.join(patient,'vector-pred/pred_4C_r.npy'),scale, image_center)
-    vector_SA = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/pred_BASAL_t.npy'),os.path.join(patient,'vector-pred/pred_BASAL_r.npy'),scale, image_center)
+        # check whether already done
+        if os.path.isfile(os.path.join(save_folder,patient_id+'_predicted_planes.mp4')) == 1:
+            print('already done ')
+            continue
 
-    # define plane num for SAX stack:
-    normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
-    a,b = ff.find_num_of_slices_in_SAX(np.zeros([160,160,1]),image_center,vector_SA['t'],vector_SA['x'],vector_SA['y'],seg_data,2.59)
-    t_file = open(os.path.join(patient,"slice_num_info.txt"),"w+")
-    t_file.write("num of slices before basal = %d\nnum of slices after basal = %d" % (a, b))
-    t_file.close()
+        seg = nib.load(os.path.join(patient,'seg-pred/batch_'+str(batch_seg),'pred_s_0.nii.gz')); seg_data = seg.get_fdata()
+        volume_dim = nib.load(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
+        image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
 
-    # transfer vector into native res:
-    if native_res == 1:
-        V = []
-        for v in [vector_2C,vector_3C,vector_4C,vector_SA]:
-            v = ff.adapt_reslice_vector_for_native_resolution(v,os.path.join(patient,'img-nii-sm/0.nii.gz'),os.path.join(patient,'img-nii/0.nii.gz'))
-            v['s'] = ff.set_scale_for_unequal_x_and_y(v)
-            V.append(v)
-        [vector_2C,vector_3C,vector_4C,vector_SA] = [V[0],V[1],V[2],V[3]] 
+        # load vectors
+        vector_2C = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_2C_t.npy'),os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_2C_r.npy'),scale, image_center)
+        vector_3C = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_3C_t.npy'),os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_3C_r.npy'),scale, image_center)
+        vector_4C = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_4C_t.npy'),os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_4C_r.npy'),scale, image_center)
+        vector_SA = ff.get_predicted_vectors(os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_BASAL_t.npy'),os.path.join(patient,'vector-pred/batch_'+str(batch),'pred_BASAL_r.npy'),scale, image_center)
 
-        volume_dim = nib.load(os.path.join(patient,'img-nii/0.nii.gz')).shape
-        image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2])
-
-    # get a center list of SAX stack
-    if native_res == 1:
-        pix_dim = ff.get_voxel_size(os.path.join(patient,'img-nii/0.nii.gz'))
-        pix_size = ff.length(pix_dim)
+        # define plane num for SAX stack:
         normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
-        center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
-    else:
-        center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,2.59)
+        a,b = ff.find_num_of_slices_in_SAX(np.zeros([160,160,1]),image_center,vector_SA['t'],vector_SA['x'],vector_SA['y'],seg_data,2.59)
+        t_file = open(os.path.join(patient,"slice_num_info.txt"),"w+")
+        t_file.write("num of slices before basal = %d\nnum of slices after basal = %d" % (a, b))
+        t_file.close()
 
-    # get the index of each planes of 9-plane SAX stack (9 planes should start from MV and end with apex, convering the whole LV)
-    index_list,center_list9 = ff.resample_SAX_stack_into_particular_num_of_planes(range(2,center_list.shape[0]),9,center_list)
+        # transfer vector into native res:
+        if native_res == 1:
+            V = []
+            for v in [vector_2C,vector_3C,vector_4C,vector_SA]:
+                v = ff.adapt_reslice_vector_for_native_resolution(v,os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'),os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii/0.nii.gz'))
+                v['s'] = ff.set_scale_for_unequal_x_and_y(v)
+                V.append(v)
+            [vector_2C,vector_3C,vector_4C,vector_SA] = [V[0],V[1],V[2],V[3]] 
 
-    # reslice mpr for every time frame
-    if native_res == 1:
-        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii/*.nii.gz'],patient),2)
-    else:
-        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-sm/*.nii.gz'],patient),2)
+            volume_dim = nib.load(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii/0.nii.gz')).shape
+            image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2])
 
-    for v in volume_list:
-        volume = nib.load(v)
-        volume_data = volume.get_fdata()
-        time = ff.find_timeframe(v,2)
-        save_path = os.path.join(save_folder,str(time) +'.png')
-        plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list9)
-        print('finish time '+str(time))
+        # get a center list of SAX stack
+        if native_res == 1:
+            pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii/0.nii.gz'))
+            pix_size = ff.length(pix_dim)
+            normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
+            center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
+        else:
+            center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,2.59)
 
-    # # make the movie
-    # pngs = ff.sort_timeframe(ff.find_all_target_files(['*.png'],save_folder),1)
-    # save_movie_path = os.path.join(save_folder,patient_id+'_predicted_planes.mp4')
-    # if len(pngs) >= 10:
-    #     framerate = len(pngs)
-    # else:
-    #     framerate = 10
-    # ff.make_movies(save_movie_path,pngs,10)
+        # get the index of each planes of 9-plane SAX stack (9 planes should start from MV and end with apex, convering the whole LV)
+        index_list,center_list9,gap = ff.resample_SAX_stack_into_particular_num_of_planes(range(2,center_list.shape[0]),9,center_list)
+        if gap < 1:
+            print('no LV segmentation')
+            if os.path.isfile(os.path.join(patient,'segmentation_problem_batch'+str(batch_seg)+'.txt')) == 0:
+                seg_error_file = open(os.path.join(patient,'segmentation_problem_batch'+str(batch_seg)+'.txt'),"w+")
+                seg_error_file.write("LV segmentation is off")
+                seg_error_file.close()
+            continue
 
-print('finish making image')
+
+        # reslice mpr for every time frame
+        if native_res == 1:
+            volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii/*.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+        else:
+            volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/*.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+
+
+        for v in volume_list:
+            volume = nib.load(v)
+            volume_data = volume.get_fdata()
+            if len(volume_data.shape) > 3:
+                print('this data has more than 3 dimen')
+                if os.path.isfile(os.path.join(patient,"dimension_problem.txt")) == 0:
+                    dimension_file = open(os.path.join(patient,"dimension_problem.txt"),"w+")
+                    dimension_file.write("dimension is %d %d %d %d" % (volume_data.shape[0], volume_data.shape[1],volume_data.shape[2],volume_data.shape[3]))
+                    dimension_file.close()
+                volume_data = volume_data[:,:,:,1]
+                print(volume_data.shape)
+                assert len(volume_data.shape) == 3
+            elif len(volume_data.shape) < 3:
+                print('this data has less than 3 dimen')
+                if os.path.isfile(os.path.join(patient,"dimension_problem.txt")) == 0:
+                    dimension_file = open(os.path.join(patient,"dimension_problem.txt"),"w+")
+                    dimension_file.write("dimension is %d %d" % (volume_data.shape[0], volume_data.shape[1]))
+                    dimension_file.close()
+                continue
+            else:
+                aa = 1
+
+            time = ff.find_timeframe(v,2)
+            save_path = os.path.join(save_folder,str(time) +'.png')
+            plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,center_list9)
+            print('finish time '+str(time))
+
+        # make the movie
+        pngs = ff.sort_timeframe(ff.find_all_target_files(['*.png'],save_folder),1)
+        save_movie_path = os.path.join(save_folder,patient_id+'_predicted_planes.mp4')
+        if len(pngs) >= 10:
+            framerate = len(pngs)
+        else:
+            framerate = 10
+        ff.make_movies(save_movie_path,pngs,10)
+
+    print('finish batch ',batch)
 
 
 

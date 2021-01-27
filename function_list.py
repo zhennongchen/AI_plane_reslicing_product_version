@@ -14,6 +14,7 @@ import xlsxwriter as xl
 import string
 import matplotlib.pyplot as plt
 import cv2
+import pandas as pd
 
 # function: minimize the line of codes when you have several list to append
 def massive_list_append(list_list,append_list):
@@ -24,6 +25,17 @@ def massive_list_append(list_list,append_list):
 def make_folder(folder_list):
     for i in folder_list:
         os.makedirs(i,exist_ok = True)
+
+# function: get patient_list
+def get_patient_list_from_csv(csv_file):
+    d = pd.read_csv(csv_file)
+    l = []
+    for i in range(0,d.shape[0]):
+        case = d.iloc[i]
+        patient_class = case['Patient_Class']
+        patient_id = case['Patient_ID']
+        l.append([patient_class,patient_id])
+    return l
 
 # function: multiple slice view
 def show_slices(slices,colormap = "gray",origin_point = "lower"):
@@ -199,14 +211,16 @@ def base_mid_apex(range_of_index,num_of_divisions,base_no,mid_no,apex_no):
 def resample_SAX_stack_into_particular_num_of_planes(range_of_index,num_of_planes,center_list):
     # range of index is a list in the form of range(start,end+1)
     gap = (range_of_index[-1] - range_of_index[0] ) / (num_of_planes - 1)
-    assert gap >=1
-    index_list = []
-    center_list_resample = []
-    for i in range(0,num_of_planes):
-        index = math.floor(range_of_index[0] + gap * i)
-        index_list.append(index)
-        center_list_resample.append(center_list[index,:])
-    return index_list,center_list_resample
+    if gap >= 1:
+        index_list = []
+        center_list_resample = []
+        for i in range(0,num_of_planes):
+            index = math.floor(range_of_index[0] + gap * i)
+            index_list.append(index)
+            center_list_resample.append(center_list[index,:])
+        return index_list,center_list_resample,gap
+    else: 
+        return 0,0,gap
 
 # function: define the interpolation
 def define_interpolation(data,Fill_value=0,Method='linear'):
@@ -531,13 +545,14 @@ def make_movies(save_path,pngs,fps):
     mpr_array=[]
     i = cv2.imread(pngs[0])
     h,w,l = i.shape
-    
+
     for j in pngs:
         img = cv2.imread(j)
         mpr_array.append(img)
 
+
     # save movies
-    out = cv2.VideoWriter(save_path,cv2.VideoWriter_fourcc(*'mp4v'),fps,(w,h))
+    out = cv2.VideoWriter(save_path,cv2.VideoWriter_fourcc(*'mp4v'),10,(w,h))
     for j in range(len(mpr_array)):
         out.write(mpr_array[j])
     out.release()

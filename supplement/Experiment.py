@@ -4,10 +4,15 @@ import os
 class Experiment():
 
   def __init__(self):
-  
-    self.patient_dir = os.environ['CG_PATIENT_DIR']
 
+    # # folder
+    self.main_data_dir = os.environ['CG_MAIN_DATA_DIR']
+    self.image_data_dir = os.environ['CG_IMAGE_DATA_DIR']
+    self.local_dir = os.environ['CG_OCTOMORE_DIR']
     self.model_dir = os.environ['CG_MODEL_DIR']
+    self.save_dir = os.environ['CG_SAVE_DIR']
+    self.final_dir = os.environ['CG_FINAL_DIR']
+
   
     # Dimension of padded input, for training.
     self.dim = (int(os.environ['CG_CROP_X']), int(os.environ['CG_CROP_Y']), int(os.environ['CG_CROP_Z']))
