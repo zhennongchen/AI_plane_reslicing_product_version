@@ -109,6 +109,8 @@ csv_file = pd.read_csv(os.path.join('/Data/McVeighLabSuper/projects/Zhennong','P
 for i in range(0,len(patient_list)):
     patient_class = patient_list[i][0]
     patient_id = patient_list[i][1]
+    if patient_id != 'CVC1905152247':
+        continue
     print(patient_class,patient_id)
 
     case = csv_file.iloc[i]
@@ -141,10 +143,6 @@ for i in range(0,len(patient_list)):
             vector_4C = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(fourc_batch),'pred_4C_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(fourc_batch),'pred_4C_r.npy'),scale, image_center)
             vector_SA = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(sax_batch),'pred_BASAL_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(sax_batch),'pred_BASAL_r.npy'),scale, image_center)
 
-            volume_affine = ff.check_affine(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
-            A_2C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C)
-            A_3C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C)
-            A_4C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C)
 
 
             # define plane num for SAX stack:
@@ -153,6 +151,7 @@ for i in range(0,len(patient_list)):
             # t_file = open(os.path.join(patient,"slice_num_info.txt"),"w+")
             # t_file.write("num of slices before basal = %d\nnum of slices after basal = %d" % (a, b))
             # t_file.close()
+          
 
             # transfer vector into native res:
             if native_res == 1:
@@ -178,6 +177,7 @@ for i in range(0,len(patient_list)):
                 pix_size = ff.length(pix_dim)
                 normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
                 center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
+                print(center_list.shape)
             else:
                 center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,2.59)
 

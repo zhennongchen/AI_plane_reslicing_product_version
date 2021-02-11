@@ -98,7 +98,7 @@ def turn_to_pixel(vec,size=[160,160,96]):
 # function: extract vectors from numpy file
 def get_ground_truth_vectors(filename):
     a = np.load(os.path.join(filename),allow_pickle=True)
-    [t,x,y,s,img_center] = [a[12],a[5],a[7],a[11],a[14]]
+    [t,x,y,s,img_center] = [a[0],a[2],a[3],a[6],a[5]]
     result = {'t':t,'x':x,'y':y,'s':s,'img_center':img_center}
     return result
 
@@ -138,10 +138,14 @@ def get_voxel_size(nii_file_name):
 
 # function: find the number of slices above the basal plane and the number of slices lower the basal plane for SAX stack. the stack starts from 2 planes before where
 # LV segmentation starts and ends two planes after where LV segmentaion ends. 
-def find_num_of_slices_in_SAX(mpr_data,image_center,t_m,x_m,y_m,seg_m_data,pixel_dimension = 2.59):
+def find_num_of_slices_in_SAX(mpr_data,image_center,t_m,x_m,y_m,seg_m_data,normal_vector_flip = 0, pixel_dimension = 2.59):
     ''' returned a is the number of planes upon the basal plane, returned b is the number of planes below the basal plane'''
     '''2.59 = SQRT((1.5^2)*3)'''
-    n_m =  normalize(np.cross(x_m,y_m))
+    if normal_vector_flip == 0:
+        n_m =  normalize(np.cross(x_m,y_m))
+    else:
+        n_m = -normalize(np.cross(x_m,y_m))
+        
     test_a = 1
     a_manual = 0
     while test_a == True:
@@ -400,13 +404,14 @@ def DICE(seg1,seg2,target_val):
 
 
 # function: find time frame of a file
-def find_timeframe(file,num_of_dots):
+# function: find time frame of a file
+def find_timeframe(file,num_of_dots,signal = '/'):
     k = list(file)
     if num_of_dots == 1: #.png
         num1 = [i for i, e in enumerate(k) if e == '.'][-1]
     else:
         num1 = [i for i, e in enumerate(k) if e == '.'][-2]
-    num2 = [i for i,e in enumerate(k) if e== '/'][-1]
+    num2 = [i for i,e in enumerate(k) if e==signal][-1]
     kk=k[num2+1:num1]
     if len(kk)>1:
         return int(kk[0])*10+int(kk[1])
@@ -414,11 +419,11 @@ def find_timeframe(file,num_of_dots):
         return int(kk[0])
 
 # function: sort files based on their time frames
-def sort_timeframe(files,num_of_dots):
+def sort_timeframe(files,num_of_dots,signal = '/'):
     time=[]
     time_s=[]
     for i in files:
-        a = find_timeframe(i,num_of_dots)
+        a = find_timeframe(i,num_of_dots,signal)
         time.append(a)
         time_s.append(a)
     time_s.sort()

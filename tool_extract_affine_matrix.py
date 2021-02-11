@@ -55,7 +55,6 @@ def get_vectors(i,j,i_affine,j_affine): #i=img,j=mpr
     y_s = ff.length(y_d)/1 
     z_s = ff.length(z_d)/1
     scale = np.array([x_s,y_s,z_s])
-    print(scale)
 
     # vectors:
     vectors=np.array([translation_c, translation_c_n, x_n, y_n, z_n,img_center,scale])
@@ -69,11 +68,11 @@ def get_voxel_size(i):
 
 
 
-chamber_list = ['2C','3C','4C','BASAL']
+chamber_list = ['2C','3C','4C','SAX']
 chamber_choice = [0,1,2,3]
-patient_list = ff.find_all_target_files(['*'],cg.patient_dir)
-img_fld = 'img-nii'
-mpr_fld = 'mpr-nii-zc'
+patient_list = ff.find_all_target_files(['*/*'],os.path.join(cg.main_data_dir,'MPR'))
+img_fld = 'img-nii-0.625'
+mpr_fld = 'mpr-nii-0.625'
 
 
 for p in patient_list:
@@ -81,23 +80,28 @@ for p in patient_list:
     patient_class = os.path.basename(os.path.dirname(p))
     print(patient_class,patient_id)
 
-    save_folder = os.path.join(p,'vector-manual')
+    save_folder = os.path.join(p,'plane-vector-manual-0.625')
     ff.make_folder([save_folder])
 
 
     for c in chamber_choice:
         chamber = chamber_list[c]
+        
+        save_file = os.path.join(save_folder,'manual_'+chamber+'.npy')
+        if os.path.isfile(save_file) == 1:
+            print('already done chamber ', chamber)
+            continue
 
         #image 1.5mm
-        i = os.path.join(p,img_fld,'0.nii.gz')
+        i = os.path.join(cg.image_data_dir,patient_class,patient_id,img_fld,'0.nii.gz')
         i_affine = ff.check_affine(i)
     
         #mpr 1.5mm
-        j = os.path.join(p,mpr_fld,chamber,'0.nii.gz')
+        j = os.path.join(cg.main_data_dir,'Resample_MPR',patient_class,patient_id,mpr_fld,chamber,'0.nii.gz')
         j_affine = nib.load(j).affine
         
-        matrix=get_vectors(i,j,i_affine,j_affine)
+        matrix = get_vectors(i,j,i_affine,j_affine)
 
-        #np.save(os.path.join(save_folder,'manual_'+chamber),matrix)
+        np.save(os.path.join(save_folder,'manual_'+chamber),matrix)
         
         

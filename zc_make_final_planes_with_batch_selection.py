@@ -16,7 +16,7 @@ cg = supplement.Experiment()
 
 WL = 500
 WW = 800
-native_res = 1
+native_res = 0
 if native_res == 1:
     plane_image_size = [480,480,1]
 else:
@@ -84,6 +84,8 @@ csv_file = pd.read_csv(os.path.join('/Data/McVeighLabSuper/projects/Zhennong','P
 for i in range(0,len(patient_list)):
     patient_class = patient_list[i][0]
     patient_id = patient_list[i][1]
+    if patient_id != 'CVC1905152247':
+        continue
     print(patient_class,patient_id)
 
     case = csv_file.iloc[i]
