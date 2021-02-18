@@ -18,12 +18,8 @@ WW = 800
 native_res = 1
 if native_res == 1:
     plane_image_size = [480,480,1]
-    color_box_size = [30,60]
 else:
     plane_image_size = [160,160,1]
-    color_box_size = [30,60]
-
-b_plus = 1
 
 scale = [1,1,0.67]
 zoom_factor = 1 # in case the background in the plane is too large 
@@ -49,27 +45,28 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
     # draw intersection lines: LAX lines on SAX
     sax_w_2c = []; sax_w_3c = []; sax_w_4c = []
     for ii in range(0,9):
-        line2c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_2C['x'],vector_2C['y'],A_2C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine)
-        line3c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_3C['x'],vector_3C['y'],A_3C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine)
-        line4c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_4C['x'],vector_4C['y'],A_4C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine)
+        if ii == 0:
+            print_message = 1
+        else:
+            print_message = 0
+        line2c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_2C['x'],vector_2C['y'],A_2C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine,print_message)
+        line3c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_3C['x'],vector_3C['y'],A_3C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine,print_message)
+        line4c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_4C['x'],vector_4C['y'],A_4C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine,print_message)
         sax_w_2c.append(line2c)
         sax_w_3c.append(line3c)
         sax_w_4c.append(line4c)
     
-    
-    
     # draw intersection lines: SAX lines on LAX
     twoc_line = np.copy(twoc); fourc_line = np.copy(fourc)
-    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[0],image_center,vector_SA)),A_2C,volume_affine)
-    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[1],image_center,vector_SA)),A_2C,volume_affine)
-    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[-1],image_center,vector_SA)),A_2C,volume_affine)
-    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[0],image_center,vector_SA)),A_4C,volume_affine)
-    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[1],image_center,vector_SA)),A_4C,volume_affine)
-    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[-1],image_center,vector_SA)),A_4C,volume_affine)
+    i_direct1 = np.array([0.97068,0.24037,0]); i_direct2 = np.array([0.95327,-0.30211,0])
+    twoc_line,_,_ = ff.draw_plane_intersection_known(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[0],image_center,vector_SA)),A_2C,volume_affine,1)
+    twoc_line,_,_ = ff.draw_plane_intersection_known(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[1],image_center,vector_SA)),A_2C,volume_affine)
+    twoc_line,_,_ = ff.draw_plane_intersection_known(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[-1],image_center,vector_SA)),A_2C,volume_affine)
+    fourc_line,_,_ = ff.draw_plane_intersection_known(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[0],image_center,vector_SA)),A_4C,volume_affine,1)
+    fourc_line,_,_ = ff.draw_plane_intersection_known(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[1],image_center,vector_SA)),A_4C,volume_affine)
+    fourc_line,_,_ = ff.draw_plane_intersection_known(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[-1],image_center,vector_SA)),A_4C,volume_affine)
 
     # normalize by WL and WW and then orient
-   
-
     twoc_n = ff.set_window(twoc,WL,WW); twoc_n = np.flip(twoc_n.T,0)
     twoc_line_n = ff.set_window(twoc_line,WL,WW); twoc_line_n = np.flip(twoc_line_n.T,0)
     threec_n = ff.set_window(threec,WL,WW); threec_n = np.flip(threec_n.T,0)
@@ -88,11 +85,11 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
     
 
     # make image
-    [h,w,d] = [480,480,1]#plane_image_size
+    [h,w,d] = plane_image_size
     I = np.zeros((h*3,w*4,3))
-    I[0:h,0:w,0] = ff.color_box(twoc_n,color_box_size[0],color_box_size[1]); I[0:h,0:w,1] = twoc_line_n; I[0:h,0:w,2] = twoc_n
-    I[h:h*2,0:w,0] = threec_n; I[h:h*2,0:w,1] = ff.color_box(threec_n,color_box_size[0],color_box_size[1]); I[h:h*2,0:w,2] = threec_n
-    I[h*2:h*3,0:w,0] = fourc_n; I[h*2:h*3,0:w,1] = fourc_line_n; I[h*2:h*3,0:w,2] = ff.color_box(fourc_n,color_box_size[0],color_box_size[1])
+    I[0:h,0:w,0] = ff.color_box(twoc_n,30,60); I[0:h,0:w,1] = twoc_line_n; I[0:h,0:w,2] = twoc_n
+    I[h:h*2,0:w,0] = threec_n; I[h:h*2,0:w,1] = ff.color_box(threec_n,30,60); I[h:h*2,0:w,2] = threec_n
+    I[h*2:h*3,0:w,0] = fourc_n; I[h*2:h*3,0:w,1] = fourc_line_n; I[h*2:h*3,0:w,2] = ff.color_box(fourc_n,30,60)
     I[0:h,w:w*2,0] = sax_w_2c_n[0]; I[0:h,w:w*2,1] = sax_w_3c_n[0]; I[0:h,w:w*2,2] = sax_w_4c_n[0]
     I[0:h,w*2:w*3,0] = sax_w_2c_n[1]; I[0:h,w*2:w*3,1] = sax_w_3c_n[1]; I[0:h,w*2:w*3,2] = sax_w_4c_n[1]
     I[0:h,w*3:w*4,0] = sax_w_2c_n[2]; I[0:h,w*3:w*4,1] = sax_w_3c_n[2]; I[0:h,w*3:w*4,2] = sax_w_4c_n[2]
@@ -113,18 +110,11 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
 patient_list = ff.get_patient_list_from_csv(os.path.join('/Data/McVeighLabSuper/projects/Zhennong','Patient_list_batch_selection.csv'))
 csv_file = pd.read_csv(os.path.join('/Data/McVeighLabSuper/projects/Zhennong','Patient_list_batch_selection.csv'))
 
-# LL = ['CVC1907251059','CVC1909101423','CVC1908270958','CVC1904190852','CVC1910150845','CVC1908021157','CVC1908300959_CRT','CVC1911081010',
-# 'CVC1903130917','CVC1908301100','CVC1906251133','CVC1911051450','CVC1910041633','CVC1909031039','CVC1904091037',
-# 'CVC1907231449','CVC1901031049','CVC1908280929','CVC1911040911','CVC1907110858','CVC1902151307','CVC1903151505',
-# 'CVC1912121107','CVC1904291452','CVC1911221923','CVC1908301550','CVC1906270913','CVC1910230943','CVC1906241353',
-# 'CVC1904221041','CVC1911071002','CVC1911050924']
-
-LL = ['CVC1911071002']
 
 for i in range(0,len(patient_list)):
     patient_class = patient_list[i][0]
     patient_id = patient_list[i][1]
-    if patient_id not in LL:
+    if patient_id != 'CVC1911040911':
         continue
     print(patient_class,patient_id)
 
@@ -139,18 +129,18 @@ for i in range(0,len(patient_list)):
         print('this case is exclude!!!')
         continue
     else:
-        save_folder = os.path.join(cg.final_dir,patient_class,patient_id,'planes_pred_lines_2')
+        save_folder = os.path.join(cg.final_dir,patient_class,patient_id,'planes_pred_lines2')
         ff.make_folder([os.path.dirname(save_folder),save_folder])
     
     
     plane_batch_selection = [twoc_batch,threec_batch,fourc_batch,sax_batch]
-    if os.path.isfile(os.path.join(cg.final_dir,patient_class,patient_id,'planes_pred_lines_2',patient_id+'_predicted_planes.mp4')) == 1:
+    if os.path.isfile(os.path.join(cg.final_dir,patient_class,patient_id,'planes_pred_lines2',patient_id+'_predicted_planes.mp4')) == 1:
         print('already done')
     else:
 
             seg = nib.load(os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred/batch_'+str(seg_batch),'pred_s_0.nii.gz')); seg_data = seg.get_fdata()
             volume_dim = nib.load(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
-            #print(volume_dim,ff.get_voxel_size(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')))
+            print(volume_dim,ff.get_voxel_size(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')))
             image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
 
             # load vectors
@@ -158,6 +148,7 @@ for i in range(0,len(patient_list)):
             vector_3C = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(threec_batch),'pred_3C_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(threec_batch),'pred_3C_r.npy'),scale, image_center)
             vector_4C = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(fourc_batch),'pred_4C_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(fourc_batch),'pred_4C_r.npy'),scale, image_center)
             vector_SA = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(sax_batch),'pred_BASAL_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(sax_batch),'pred_BASAL_r.npy'),scale, image_center)
+
 
 
             # define plane num for SAX stack:
@@ -201,15 +192,27 @@ for i in range(0,len(patient_list)):
             if native_res == 1:
                 pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii/0.nii.gz'))
                 pix_size = ff.length(pix_dim)
-                #print(volume_dim,pix_dim)
+                print(volume_dim,pix_dim)
                 normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
                 #print('at high res, normal vector is ',normal_vector)
-                center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b+b_plus,8,pix_size)
+                center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
+                #print(center_list,center_list[1] - center_list[0], center_list[-1] - center_list[-2])
             else:
                 center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,2.598076211353316)
-           
-           
+                #print(center_list,center_list[1] - center_list[0], center_list[-1] - center_list[-2])
+            
+            # center_list_examine = np.copy(center_list)
+            # delete_count = 0
+            # for ccc in range(0,center_list_examine.shape[0]):
+            #     center_examine = center_list_examine[ccc]
+            #     if center_examine[0] < 2 or center_examine[1] <2 or center_examine[2] < 2:
+            #         print(center_examine)
+            #         center_list = np.delete(center_list,ccc - delete_count,0)
+            #         delete_count +=1
+            # print(center_list)
                     
+                    
+
             
             # get the index of each planes of 9-plane SAX stack (9 planes should start from MV and end with apex, convering the whole LV)
             index_list,center_list9,gap = ff.resample_SAX_stack_into_particular_num_of_planes(range(2,center_list.shape[0]),9,center_list)

@@ -355,7 +355,7 @@ def draw_arbitrary_axis(image,axis,start_point,length = 500):
     return result
 
 # function: draw the intersection of two mpr planes on one plane (draw the intersection of plane 1 and 2 on plane 2)
-def draw_plane_intersection(plane2_image,plane1_x,plane1_y,plane1_affine,plane2_affine,volume_affine):
+def draw_plane_intersection(plane2_image,plane1_x,plane1_y,plane1_affine,plane2_affine,volume_affine,print_message = 0):
     '''plane 2 is the plane in which we want to draw axis'''
     real_x = convert_coordinates(plane2_affine,volume_affine,np.array([1,1,1]+plane1_x)) - convert_coordinates(plane2_affine,volume_affine,np.array([1,1,1]))
     real_y = convert_coordinates(plane2_affine,volume_affine,np.array([1,1,1]+plane1_y)) - convert_coordinates(plane2_affine,volume_affine,np.array([1,1,1]))
@@ -363,6 +363,8 @@ def draw_plane_intersection(plane2_image,plane1_x,plane1_y,plane1_affine,plane2_
     n1 = np.cross(real_x,real_y)
     n2 = np.array([0,0,1])
     intersect_direct = (0.5/(np.cross(n1,n2)[0])) * np.cross(n1,n2)
+    if print_message == 1:
+        print('direction n1 is ', n1, normalize(n1))
     
     # find one point in the intersection line
     # a plane is defined as <a,b,c> . <x-x0,y-y0,z-z0> = 0
@@ -376,6 +378,13 @@ def draw_plane_intersection(plane2_image,plane1_x,plane1_y,plane1_affine,plane2_
     u = np.cross(n1,n2)
     u_length = math.sqrt(u[0]**2+u[1]**2+u[2]**2)
     intersect_point = np.cross((d2*n1-d1*n2),u)/(u_length**2)
+    if print_message == 1:
+        print('point is ', intersect_point)
+    
+    # for upsample
+    #intersect_point_1 = np.array([(intersect_point[0] - 80)*3 + 240 , (intersect_point[1]-80)*3 + 240, 0])
+    #intersect_point = intersect_point_1
+
     result_line = draw_arbitrary_axis(plane2_image,intersect_direct,intersect_point)
     return result_line,intersect_direct,intersect_point
 
@@ -517,7 +526,10 @@ def adapt_reslice_vector_for_native_resolution(vector,volume_file_low,volume_fil
     A_low = check_affine(volume_file_low)
     A_native = check_affine(volume_file_native)
     dim_low = get_voxel_size(volume_file_low)
+  
     dim_native = get_voxel_size(volume_file_native) 
+
+
     # adapt direction vectors:
     vector['x'] = convert_coordinates(A_native,A_low,vector['x']) - convert_coordinates(A_native,A_low,[0,0,0])
     vector['y'] = convert_coordinates(A_native,A_low,vector['y']) - convert_coordinates(A_native,A_low,[0,0,0])

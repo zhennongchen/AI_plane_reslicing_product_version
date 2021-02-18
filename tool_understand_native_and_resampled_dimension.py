@@ -13,36 +13,37 @@ cg = supplement.Experiment()
 np.set_printoptions(precision=2,suppress=True)
 
 # define your patient
-patient = 'CVC1901241836'
+patient = 'CVC1908280929'
+patient_dir = '/Data/McVeighLabSuper/projects/Zhennong/AI/Zhennong_WMA_Movie_dataset/'
 
 # first: check the pixel dimension:
-pix_dim_high = ff.get_voxel_size(os.path.join(cg.patient_dir, patient,'img-nii/0.nii.gz'))
-pix_dim_low = ff.get_voxel_size(os.path.join(cg.patient_dir, patient,'img-nii-sm/0.nii.gz'))
-pix_dim_mpr_high = ff.get_voxel_size(os.path.join(cg.patient_dir, patient,'mpr-nii-zc/2C/0.nii.gz'))
-pix_dim_mpr_low = ff.get_voxel_size(os.path.join(cg.patient_dir, patient,'mpr-nii-zc-sm-1.5/2C/0.nii.gz'))
+pix_dim_high = ff.get_voxel_size(os.path.join(patient_dir, patient,'img-nii/0.nii.gz'))
+pix_dim_low = ff.get_voxel_size(os.path.join(patient_dir, patient,'img-nii-sm/0.nii.gz'))
+pix_dim_mpr_high = ff.get_voxel_size(os.path.join(patient_dir, patient,'mpr-nii-zc/BASAL/0.nii.gz'))
+pix_dim_mpr_low = ff.get_voxel_size(os.path.join(patient_dir, patient,'mpr-nii-zc-sm-1.5/BASAL/0.nii.gz'))
 print('pixel dimension of original CT volume: ', pix_dim_high)
 print('pixel dimension of MPR re-sliced from original volume: ', pix_dim_mpr_high)
 print('pixel dimension of resampled CT volume: ', pix_dim_low)
 print('pixel dimension of MPR re-sliced from resampled volume: ', pix_dim_mpr_low)
 
 # load vectors for both low res and native res
-m_low = np.load(os.path.join(cg.patient_dir,patient,'vector-manual/manual_2C.npy'),allow_pickle = True)
-m_high = np.load(os.path.join(cg.patient_dir,patient,'vector-manual/manual_2C_high.npy'),allow_pickle = True)
+m_low = np.load(os.path.join(patient_dir,patient,'vector-manual/manual_BASAL.npy'),allow_pickle = True)
+m_high = np.load(os.path.join(patient_dir,patient,'vector-manual/manual_BASAL_high.npy'),allow_pickle = True)
 
 t_low,x_low,y_low,scale_low = [m_low[0],m_low[2],m_low[3],m_low[-1]]
 t_high,x_high,y_high,scale_high = [m_high[0],m_high[2],m_high[3],m_high[-1]]
 
 # now let's print out the vectors and their vector length
-print('unit plane vectors for low res: \n', t_low,x_low,y_low,)
+print('unit plane vectors for low res: \n', t_low,x_low,y_low,ff.normalize(np.cross(x_low,y_low)))
 print('the length of plane vectors in low res: \n', scale_low)
-print('unit plane vectors in native res: \n',t_high,x_high,y_high)
+print('unit plane vectors in native res: \n',t_high,x_high,y_high,ff.normalize(np.cross(x_high,y_high)))
 print('the length of plane vectors in high res: \n', scale_high)
 
 print('\nnow HOW do we convert vector for low res to high res? \nANSWER: use affine transformation! \n')
 
 # load affine
-A_low = ff.check_affine(os.path.join(cg.patient_dir,patient,'img-nii-sm/0.nii.gz'))
-A_high = ff.check_affine(os.path.join(cg.patient_dir,patient,'img-nii/0.nii.gz'))
+A_low = ff.check_affine(os.path.join(patient_dir,patient,'img-nii-sm/0.nii.gz'))
+A_high = ff.check_affine(os.path.join(patient_dir,patient,'img-nii/0.nii.gz'))
 
 # test t vector
 new_t = np.asarray([t_low[i] * pix_dim_low[i] / pix_dim_high[i] for i in range(0,t_low.shape[0])])
@@ -61,8 +62,8 @@ print('converted y vector: \n',ff.normalize(new_y))
 print('\nNow we should get converted vector == vector for native res. Let''s test with home-made function: \n')
 
 # test with our function
-vector = ff.get_ground_truth_vectors_product_v(os.path.join(cg.patient_dir,patient,'vector-manual/manual_2C.npy'))
-vector = ff.adapt_reslice_vector_for_native_resolution(vector,os.path.join(cg.patient_dir,patient,'img-nii-sm/0.nii.gz'),os.path.join(cg.patient_dir,patient,'img-nii/0.nii.gz'))
+vector = ff.get_ground_truth_vectors_product_v(os.path.join(patient_dir,patient,'vector-manual/manual_BASAL.npy'))
+vector = ff.adapt_reslice_vector_for_native_resolution(vector,os.path.join(patient_dir,patient,'img-nii-sm/0.nii.gz'),os.path.join(patient_dir,patient,'img-nii/0.nii.gz'))
 print('after applying home-made function that automatically do the conversion, vector is: \n',vector)
 
 

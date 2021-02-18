@@ -22,7 +22,7 @@ dv_utils_fld="/home/cnn/Documents/Repos/dv-commandline-utils/bin/"
 # patient list
 PATIENT=(/media/McVeighLabSuper/wip/zhennong/MPR/Abnormal/*/)
 PATIENT+=(/media/McVeighLabSuper/wip/zhennong/MPR/Normal/*/)
-SAVE_DIR="/media/local_storage/Zhennong/VR_Data_Resample_MPR/"
+SAVE_DIR="/media/local_storage/Zhennong/Resample_MPR/"
 
 
 SLICE[0]=2C
