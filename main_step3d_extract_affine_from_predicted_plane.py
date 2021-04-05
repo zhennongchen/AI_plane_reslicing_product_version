@@ -68,11 +68,11 @@ def get_voxel_size(i):
 
 
 
-chamber_list = ['2C','3C','4C','SAX']
+chamber_list = ['2C','3C','4C','BASAL']
 chamber_choice = [0,1,2,3]
-patient_list = ff.find_all_target_files(['Normal/*'],os.path.join(cg.main_data_dir,'MPR'))
+patient_list = ff.find_all_target_files(['Normal/*','Abnormal/*'],cg.save_dir)
 img_fld = 'img-nii-0.625'
-mpr_fld = 'mpr-nii-resample'
+mpr_fld = 'planes_pred_high_res_0.625_nii'
 
 
 for p in patient_list:
@@ -80,14 +80,14 @@ for p in patient_list:
     patient_class = os.path.basename(os.path.dirname(p))
     print(patient_class,patient_id)
 
-    save_folder = os.path.join(p,'plane-vector-manual')
+    save_folder = os.path.join(p,'vector-pred-high-res-0.625')
     ff.make_folder([save_folder])
 
 
     for c in chamber_choice:
         chamber = chamber_list[c]
         
-        save_file = os.path.join(save_folder,'manual_'+chamber+'.npy')
+        save_file = os.path.join(save_folder,'pred_'+chamber+'.npy')
         if os.path.isfile(save_file) == 1:
             print('already done chamber ', chamber)
             continue
@@ -97,11 +97,13 @@ for p in patient_list:
         i_affine = ff.check_affine(i)
     
         #mpr 1.5mm
-        j = os.path.join(cg.main_data_dir,'MPR',patient_class,patient_id,mpr_fld,chamber,'0.nii.gz')
+        j = os.path.join(cg.save_dir,patient_class,patient_id,mpr_fld,'pred_'+chamber+'.nii.gz')
+        if os.path.isfile(j) == 0:
+            continue
         j_affine = nib.load(j).affine
         
         matrix = get_vectors(i,j,i_affine,j_affine)
-
-        np.save(os.path.join(save_folder,'manual_'+chamber),matrix)
+        print(matrix)
+        np.save(os.path.join(save_folder,'pred_'+chamber+'.npy'),matrix)
         
         

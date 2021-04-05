@@ -96,6 +96,11 @@ for batch in range(0,5):
     for p in patient_list:
       patient_class = os.path.basename(os.path.dirname(p))
       patient_id = os.path.basename(p)
+   
+
+      if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch),'pred_BASAL_r.npy')) == 1:
+        continue
+
       print(patient_class, patient_id)
 
       # find the input images for all time frames:

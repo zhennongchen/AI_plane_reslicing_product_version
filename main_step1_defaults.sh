@@ -22,9 +22,9 @@ export CG_FEATURE_DEPTH=8
 export CG_MAIN_DATA_DIR="/Data/McVeighLabSuper/wip/zhennong/"
 export CG_IMAGE_DATA_DIR="/Data/McVeighLabSuper/wip/zhennong/nii-images/"
 export CG_MODEL_DIR="/Data/McVeighLabSuper/projects/Zhennong/AI/CNN/all-classes-all-phases-data-1.5/" 
-export CG_OCTOMORE_DIR="/Data/local_storage/Zhennong/Plane_Validation_Data_1.5/"
-export CG_SAVE_DIR="/Data/ContijochLab/workspaces/zhennong/AI_plane_validation_study/Predict"
-export CG_FINAL_DIR="/Data/ContijochLab/workspaces/zhennong/AI_plane_validation_study/Planes"
+export CG_OCTOMORE_DIR="/Data/local_storage/Zhennong/VR_Data_0.625/"
+export CG_SAVE_DIR="/Data/ContijochLab/workspaces/zhennong/Cases_for_Cardiowise_Elliot/Predict"
+export CG_FINAL_DIR="/Data/ContijochLab/workspaces/zhennong/Cases_for_Cardiowise_Elliot/Plane_movies/"
 
 
 

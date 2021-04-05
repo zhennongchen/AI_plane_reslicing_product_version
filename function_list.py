@@ -564,6 +564,7 @@ def make_movies(save_path,pngs,fps):
     h,w,l = i.shape
 
     for j in pngs:
+        print('read image ok, ',j)
         img = cv2.imread(j)
         mpr_array.append(img)
 

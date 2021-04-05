@@ -2,8 +2,8 @@
 # run in docker c3d
 
 # Get a list of patients.
-patients=(/Data/McVeighLabSuper/wip/zhennong/nii-images/Abnormal/*/ )
-patients+=(/Data/McVeighLabSuper/wip/zhennong/nii-images/Normal/*/ )
+patients=(/Data/ContijochLab/workspaces/zhennong/AUH_data/nii-images/*/*/ )
+#patients+=(/Data/ContijochLab/workspaces/zhennong/Cases_for_Cardiowise_Elliot/nii-images/Normal/*/ )
 
 img_or_seg=1 # 1 is image, 0 is seg
 
@@ -27,12 +27,11 @@ do
 
     # set output folder
     if ((${img_or_seg} == 1));then
-    o_dir=${p}img-nii-1.5
+    o_dir=${p}img-nii-0.625
     else
     o_dir=${p}seg-nii-1.5
     fi
     mkdir -p ${o_dir}
-    
     
 
     # find all the data with original resolution
@@ -48,12 +47,12 @@ do
         else
             if ((${img_or_seg} == 1))
             then
-                c3d ${i_file} -interpolation Cubic -resample-mm 1.5x1.5x1.5mm -o ${o_file}
+                c3d ${i_file} -interpolation Cubic -resample-mm 0.625x0.625x0.625mm -o ${o_file}
             else
                 c3d ${i_file} -interpolation NearestNeighbor -resample-mm 1.5x1.5x1.5mm -o ${o_file}
             fi
         fi      
     done
-done
+done 
 
 
