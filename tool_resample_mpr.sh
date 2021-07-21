@@ -20,9 +20,10 @@ dv_utils_fld="/home/cnn/Documents/Repos/dv-commandline-utils/bin/"
 
 
 # patient list
-PATIENT=(/media/McVeighLabSuper/wip/Cases_for_Cardiowise_Elliot/MPR/Normal/*/)
-#PATIENT+=(/media/McVeighLabSuper/wip/zhennong/MPR/Normal/*/)
-SAVE_DIR="/media/ContijochLab/workspaces/zhennong/Cases_for_Cardiowise_Elliot/MPR/"
+#PATIENT=(/media/McVeighLabSuper/wip/Cases_for_Cardiowise_Elliot/MPR/Normal/*/)
+PATIENT=(/media/McVeighLabSuper/wip/zhennong/2020_after_Junes/MPR/Abnormal/*/)
+PATIENT+=(/media/McVeighLabSuper/wip/zhennong/2020_after_Junes/MPR/Normal/*/)
+SAVE_DIR="/media/local_storage/Zhennong/Resample_MPR_2020_after_Junes/"
 
 
 SLICE[0]=2C
@@ -32,7 +33,7 @@ SLICE[3]=SAX
 
 
 # Folder where you want to put the reslice
-fld_prefix=mpr-nii-resample
+fld_prefix=mpr-nii-0.625
 
 # Folder where the volumes to be resliced reside
 input_fld=img-nii-0.625
@@ -56,7 +57,7 @@ do
     mkdir -p ${SAVE_DIR}${patient_class}/${patient_id}
     mkdir -p ${save_folder}
 
-    IMGS=(/media/ContijochLab/workspaces/zhennong/Cases_for_Cardiowise_Elliot/nii-images/${patient_class}/${patient_id}/${input_fld}/0.nii.gz) ###CHANGE IF MPR HAS A SERIES
+    IMGS=(/media/McVeighLabSuper/wip/zhennong/2020_after_Junes/nii-images/${patient_class}/${patient_id}/${input_fld}/0.nii.gz) ###CHANGE IF MPR HAS A SERIES
     echo ${IMGS[0]}
 
     for i in $(seq 0 $(( ${#IMGS[*]} - 1 )));

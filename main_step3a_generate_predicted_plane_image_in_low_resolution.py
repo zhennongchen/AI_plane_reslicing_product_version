@@ -14,7 +14,7 @@ from PIL import Image
 cg = supplement.Experiment()
 
 WL = 500
-WW = 800
+WW = 800  #####change the width!!!!!!!!!!!
 native_res = 0
 plane_image_size = [160,160,1]
 color_box_size = [10,20]
@@ -29,11 +29,13 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
     # define interpolation matrix
     inter = ff.define_interpolation(volume_data,Fill_value=volume_data.min(),Method='linear')
     
+    zoom_factor = 1.1
     # reslice long axis
     twoc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_2C['t'],vector_2C['x'],vector_2C['y'],vector_2C['s'][0]/zoom_factor,vector_2C['s'][1]/zoom_factor,inter)
     threec = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_3C['t'],vector_3C['x'],vector_3C['y'],vector_3C['s'][0]/zoom_factor,vector_3C['s'][1]/zoom_factor,inter)
     fourc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_4C['t'],vector_4C['x'],vector_4C['y'],vector_4C['s'][0]/zoom_factor,vector_4C['s'][1]/zoom_factor,inter)
 
+    zoom_factor = 1.25
     # reslice short axis
     sax_collection = []
     for i in range(0,9):
@@ -104,11 +106,12 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
 
 
 # main function for image
-patient_list = ff.find_all_target_files(['Abnormal/*','Normal/*'],cg.save_dir)
+patient_list = ff.find_all_target_files(['172/172pre'],cg.save_dir)
 # define which segmentation prediction batch will be used
 batch_seg = 3
 
 for batch in range(0,5):
+    print('Batch is ', batch)
     for patient in patient_list:
         patient_id = os.path.basename(patient)
         patient_class = os.path.basename(os.path.dirname(patient))
@@ -118,9 +121,10 @@ for batch in range(0,5):
         ff.make_folder([os.path.dirname(save_folder),save_folder])
 
         # check whether already done
-        if os.path.isfile(os.path.join(save_folder,patient_id+'_predicted_planes.mp4')) == 1:
-            print('already done ')
-            continue
+        #if os.path.isfile(os.path.join(save_folder,patient_id+'_predicted_planes.mp4')) == 1:
+        # if os.path.isfile(os.path.join(save_folder,'0.png')) == 1:
+        #     print('already done for this patient')
+        #     continue
 
         seg = nib.load(os.path.join(patient,'seg-pred/batch_'+str(batch_seg),'pred_s_0.nii.gz')); seg_data = seg.get_fdata()
         volume_dim = nib.load(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
@@ -135,8 +139,9 @@ for batch in range(0,5):
         # define plane num for SAX stack:
         normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
         a,b = ff.find_num_of_slices_in_SAX(np.zeros([160,160,1]),image_center,vector_SA['t'],vector_SA['x'],vector_SA['y'],seg_data,0,2.59)
+        #a = 3; b = 24
         print('a is ',a,'b is ',b)
-        t_file = open(os.path.join(cg.save_dir,patient_class,patient_id,"slice_num_info_low_res.txt"),"w+")
+        t_file = open(os.path.join(cg.save_dir,patient_class,patient_id,"slice_num_info_low_res_batch_"+str(batch)+".txt"),"w+")
         t_file.write("num of slices before basal = %d\nnum of slices after basal = %d" % (a, b))
         t_file.close()
 
@@ -161,7 +166,7 @@ for batch in range(0,5):
 
 
         # reslice mpr for every time frame
-        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/*.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
 
 
         for v in volume_list:
@@ -191,10 +196,17 @@ for batch in range(0,5):
             plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,A_2C, A_3C, A_4C,center_list9)
             print('finish time '+str(time))
 
-        # make the movie
-        pngs = ff.sort_timeframe(ff.find_all_target_files(['*.png'],save_folder),1)
-        save_movie_path = os.path.join(save_folder,patient_id+'_predicted_planes.mp4')
-        ff.make_movies(save_movie_path,pngs,10)
+        # make movie
+        # pngs = ff.sort_timeframe(ff.find_all_target_files(['*.png'],os.path.join(save_folder,'pngs')),1)
+        # save_movie_path = os.path.join(save_folder,patient_id+'_planes.mp4')
+        # print(len(pngs))
+        # if len(pngs) == 16:
+        #     fps = 15 # set 16 will cause bug
+        # elif len(pngs) > 20:
+        #     fps = len(pngs)//2
+        # else:
+        #     fps = len(pngs)
+        # ff.make_movies(save_movie_path,pngs,fps)
 
     print('finish batch ',batch)
 

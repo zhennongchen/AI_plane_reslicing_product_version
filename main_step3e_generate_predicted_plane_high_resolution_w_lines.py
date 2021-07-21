@@ -14,10 +14,14 @@ import pandas as pd
 cg = supplement.Experiment()
 
 WL = 500
-WW = 800
-plane_image_size = [480,480,1]
+WW = 800 #####change the width!!!!!!!!!!!
+plane_image_size = [160,160,1]#[480,480,1]
+if plane_image_size[0] == 480:
+    color_box_size = [30,60]
+else:
+    color_box_size = [10,20]
 sax_made = 'matlab'
-#scale = [1,1,0.67]
+scale = [1,1,0.67]
 zoom_factor = 1 # in case the background in the plane is too large 
 
 
@@ -86,9 +90,9 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
     # make image
     [h,w,d] = plane_image_size
     I = np.zeros((h*3,w*4,3))
-    I[0:h,0:w,0] = ff.color_box(twoc_n,30,60); I[0:h,0:w,1] = twoc_line_n; I[0:h,0:w,2] = twoc_n
-    I[h:h*2,0:w,0] = threec_n; I[h:h*2,0:w,1] = ff.color_box(threec_line_n,30,60); I[h:h*2,0:w,2] = threec_n
-    I[h*2:h*3,0:w,0] = fourc_n; I[h*2:h*3,0:w,1] = fourc_line_n; I[h*2:h*3,0:w,2] = ff.color_box(fourc_n,30,60)
+    I[0:h,0:w,0] = ff.color_box(twoc_n,color_box_size[0],color_box_size[1]); I[0:h,0:w,1] = twoc_line_n; I[0:h,0:w,2] = twoc_n
+    I[h:h*2,0:w,0] = threec_n; I[h:h*2,0:w,1] = ff.color_box(threec_line_n,color_box_size[0],color_box_size[1]); I[h:h*2,0:w,2] = threec_n
+    I[h*2:h*3,0:w,0] = fourc_n; I[h*2:h*3,0:w,1] = fourc_line_n; I[h*2:h*3,0:w,2] = ff.color_box(fourc_n,color_box_size[0],color_box_size[1])
     I[0:h,w:w*2,0] = sax_w_2c_n[0]; I[0:h,w:w*2,1] = sax_w_3c_n[0]; I[0:h,w:w*2,2] = sax_w_4c_n[0]
     I[0:h,w*2:w*3,0] = sax_w_2c_n[1]; I[0:h,w*2:w*3,1] = sax_w_3c_n[1]; I[0:h,w*2:w*3,2] = sax_w_4c_n[1]
     I[0:h,w*3:w*4,0] = sax_w_2c_n[2]; I[0:h,w*3:w*4,1] = sax_w_3c_n[2]; I[0:h,w*3:w*4,2] = sax_w_4c_n[2]
@@ -106,7 +110,7 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
 # main function for image
 
 # get batch selection
-batch_select_excel_file = os.path.join('/Data/McVeighLabSuper/projects/Zhennong','Cases_for_Cardiowise_list_batch_selection.csv')
+batch_select_excel_file = os.path.join('/Data/McVeighLabSuper/projects/Zhennong','Patient_list_batch_selection_AUH.csv')
 if os.path.isfile(batch_select_excel_file) == 1:
     batch_pre_select = 1
     csv_file = pd.read_csv(batch_select_excel_file)
@@ -115,7 +119,7 @@ else:
     batch_pick = [3,4,4,4,4]
 
 # Get patient_list
-patient_list = ff.find_all_target_files(['Abnormal/CVC1803151048','Normal/d'],cg.save_dir)
+patient_list = ff.find_all_target_files(['*/*'],cg.save_dir)
 batch_seg = 3
 
 for i in range(0,len(patient_list)):
@@ -131,46 +135,52 @@ for i in range(0,len(patient_list)):
             print('exclude')
             continue
         else:
-            batch_pick = [int(case.iloc[0]['seg_batch']),int(case.iloc[0]['2C']),int(case.iloc[0]['3C']),int(case.iloc[0]['4C']),int(case.iloc[0]['SAX'])]
+            batch_pick = [int(case.iloc[0]['2C']),int(case.iloc[0]['3C']),int(case.iloc[0]['4C']),int(case.iloc[0]['SAX'])]
     print(batch_pick)
 
     save_folder = os.path.join(cg.final_dir,patient_class,patient_id)
-    ff.make_folder([save_folder])
+    ff.make_folder([os.path.dirname(save_folder),save_folder])
 
     if os.path.isfile(os.path.join(save_folder,patient_id+'_planes.mp4')) == 1:
         print('already done')
+        os.remove(os.path.join(save_folder,patient_id+'_planes.mp4'))
     else:
            
         # seg_file = os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred','batch_'+str(batch_pick[0])+'/pred_s_0.nii.gz')
         # seg = nib.load(seg_file)
         # seg_data = seg.get_fdata()
-        # volume_dim = nib.load(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-0.625/0.nii.gz')).shape
-        # image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
+        volume_dim = nib.load(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
+        image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
 
         # # load vectors
+        vector_2C = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch_pick[0]),'pred_2C_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch_pick[0]),'pred_2C_r.npy'),scale, image_center)
+        vector_3C = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch_pick[1]),'pred_3C_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch_pick[1]),'pred_3C_r.npy'),scale, image_center)
+        vector_4C = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch_pick[2]),'pred_4C_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id, 'vector-pred/batch_'+str(batch_pick[2]),'pred_4C_r.npy'),scale, image_center)
+        vector_SA = ff.get_predicted_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch_pick[3]),'pred_BASAL_t.npy'),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch_pick[3]),'pred_BASAL_r.npy'),scale, image_center)
         # vector_2C = ff.get_ground_truth_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred-high-res-0.625','pred_2C.npy'))
         # vector_3C = ff.get_ground_truth_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred-high-res-0.625','pred_3C.npy'))
         # vector_4C = ff.get_ground_truth_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred-high-res-0.625','pred_4C.npy'))
         # vector_SA = ff.get_ground_truth_vectors(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred-high-res-0.625','pred_BASAL.npy'))
 
 
-       
-        # if sax_made == 'Horos':
-        #     normal_vector_flip = 1
-        #     normal_vector = -ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
-        # else:
-        #     normal_vector_flip = 0
-        #     normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
+        if sax_made == 'Horos':
+            normal_vector_flip = 1
+            normal_vector = -ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
+        else:
+            normal_vector_flip = 0
+            normal_vector = ff.normalize(np.cross(vector_SA['x'],vector_SA['y'])) 
 
-        # # define plane num for SAX stack using low resolution segmentation
-        # slice_num_info_file_name = os.path.join(cg.save_dir,patient_class,patient_id,"slice_num_info_final.txt")
-        # if os.path.isfile(slice_num_info_file_name) == 1:
-        #     slice_num_info_file = open(slice_num_info_file_name, 'r')
-        #     Lines = slice_num_info_file.readlines()
-        #     line1 = Lines[0];line2 = Lines[1]
-        #     num1 = [i for i, e in enumerate(line1) if e == '='][-1]; a = int(line1[num1+2:len(line1)-1])
-        #     num2 = [i for i, e in enumerate(line2) if e == '='][-1]; b = int(line2[num2+2:len(line2)])
-        #     print(a,b)
+        # define plane num for SAX stack using low resolution segmentation
+        slice_num_info_file_name = os.path.join(cg.save_dir,patient_class,patient_id,"slice_num_info_low_res_batch_" + str(batch_pick[-1]) + ".txt")
+        if os.path.isfile(slice_num_info_file_name) == 1:
+            slice_num_info_file = open(slice_num_info_file_name, 'r')
+            Lines = slice_num_info_file.readlines()
+            line1 = Lines[0];line2 = Lines[1]
+            num1 = [i for i, e in enumerate(line1) if e == '='][-1]; a = int(line1[num1+2:len(line1)-1])
+            num2 = [i for i, e in enumerate(line2) if e == '='][-1]; b = int(line2[num2+2:len(line2)])
+            print(a,b)
+        else:
+            ValueError('no pre saved slice num')
         # else:   
         #     seg_dim = seg.shape
         #     seg_center = np.array([(seg_dim[0]-1)/2,(seg_dim[1]-1)/2,(seg_dim[-1]-1)/2]) 
@@ -182,52 +192,58 @@ for i in range(0,len(patient_list)):
         #     slice_num_info_file.close()
           
 
-        # # get affine matrix
-        # volume_affine = ff.check_affine(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-0.625/0.nii.gz'))
-        # A_2C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C)
-        # A_3C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C)
-        # A_4C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C)
+        # get affine matrix
+        volume_affine = ff.check_affine(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        A_2C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C)
+        A_3C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C)
+        A_4C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C)
       
 
-        # # get a center list of SAX stack
-        # pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-0.625/0.nii.gz'))
-        # pix_size = ff.length(pix_dim)
-        # center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
-        # print('pix_size: ',pix_dim,pix_size)
+        # get a center list of SAX stack
+        pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        pix_size = ff.length(pix_dim)
+        center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
+        print('pix_size: ',pix_dim,pix_size)
         
-        # # get the index of each planes of 9-plane SAX stack (9 planes should start from MV and end with apex, convering the whole LV)
-        # index_list,center_list9,gap = ff.resample_SAX_stack_into_particular_num_of_planes(range(2,center_list.shape[0]),9,center_list)
+        # get the index of each planes of 9-plane SAX stack (9 planes should start from MV and end with apex, convering the whole LV)
+        index_list,center_list9,gap = ff.resample_SAX_stack_into_particular_num_of_planes(range(2,center_list.shape[0]),9,center_list)
         # if gap < 1:
         #     ValueError('no LV segmentation')
 
         
-        # volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-0.625/*.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/*.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
 
+        for v in volume_list:
+            volume = nib.load(v)
+            volume_data = volume.get_fdata()
+            if len(volume_data.shape) > 3:
+                print('this data has more than 3 dimen')
+                volume_data = volume_data[:,:,:,1]
+                print(volume_data.shape)
+                assert len(volume_data.shape) == 3
+            elif len(volume_data.shape) < 3:
+                print('this data has less than 3 dimen')
+                continue
+            else:
+                aa = 1
 
-        # for v in volume_list:
-        #     volume = nib.load(v)
-        #     volume_data = volume.get_fdata()
-        #     if len(volume_data.shape) > 3:
-        #         print('this data has more than 3 dimen')
-        #         volume_data = volume_data[:,:,:,1]
-        #         print(volume_data.shape)
-        #         assert len(volume_data.shape) == 3
-        #     elif len(volume_data.shape) < 3:
-        #         print('this data has less than 3 dimen')
-        #         continue
-        #     else:
-        #         aa = 1
-
-        #     time = ff.find_timeframe(v,2)
-        #     save_path = os.path.join(save_folder,'pngs',str(time) +'.png')
-        #     ff.make_folder([os.path.dirname(save_path)])
-        #     plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,A_2C,A_3C,A_4C,center_list9)
-        #     print('finish time '+str(time))
+            time = ff.find_timeframe(v,2)
+            save_path = os.path.join(save_folder,'pngs',str(time) +'.png')
+            ff.make_folder([os.path.dirname(save_path)])
+            plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,A_2C,A_3C,A_4C,center_list9)
+            print('finish time '+str(time))
 
         # make the movie
         pngs = ff.sort_timeframe(ff.find_all_target_files(['*.png'],os.path.join(save_folder,'pngs')),1)
         save_movie_path = os.path.join(save_folder,patient_id+'_planes.mp4')
-        ff.make_movies(save_movie_path,pngs,10)
+        print(len(pngs))
+        if len(pngs) == 16:
+            fps = 15 # set 16 will cause bug
+        elif len(pngs) > 20:
+            fps = len(pngs)//2
+        else:
+            fps = len(pngs)
+        ff.make_movies(save_movie_path,pngs,fps)
 
 
     

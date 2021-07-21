@@ -14,36 +14,49 @@ import supplement
 np.random.seed(0)
 cg = supplement.Experiment()
 
-# # delete
-# folders = ff.find_all_target_files(['*/*/slice_num_info.txt'],cg.save_dir)
-# print(folders.shape)
-# for f in folders:
-#     #shutil.rmtree(f)
-#     os.remove(f)
-# folders = ff.find_all_target_files(['*/*/slice_num_info.txt'],cg.save_dir)
-# print(folders.shape)
+# delete
+# patient_list_excel = pd.read_excel(os.path.join('/Data/McVeighLabSuper/wip/zhennong','Patients_We_need_to_reslice.xlsx'))
+# patient_list = []
+# for i in range(0,patient_list_excel.shape[0]):
+#     patient_list.append([patient_list_excel.iloc[i]['Patient_Class'], patient_list_excel.iloc[i]['Patient_ID']])
 
-
+# for i in range(0,len(patient_list)):
+#     patient_class = patient_list[i][0]
+#     patient_id = patient_list[i][1]
+#     folder = os.path.join('/Data/local_storage/Zhennong/Resample_MPR',patient_class,patient_id)
+#     if os.path.isdir(folder) == 1:
+#         shutil.rmtree(folder)
+#     else:
+#         folder = os.path.join('/Data/local_storage/Zhennong/Resample_MPR_2020_after_Junes',patient_class,patient_id)
+#         if os.path.isdir(folder) == 1:
+#             shutil.rmtree(folder)
+#         else:
+#             print(patient_id)
 
 
 # file transfer 
-main_folder = '/Data/ContijochLab/workspaces/zhennong/AUH_data/nii-images/'
-case_list = ff.find_all_target_files(['*/*'],main_folder)
-for c in case_list:
-    print(os.path.basename(c))
-    nii_image_folder = os.path.join(c,'img-nii')
-    ff.make_folder([nii_image_folder])
-    image_list = ff.find_all_target_files(['*.nii.gz'],c)
-    for i in image_list:
-        shutil.move(i,os.path.join(nii_image_folder,os.path.basename(i)))
-    
+# patient_list = ff.find_all_target_files(['*/*'],os.path.join(cg.main_data_dir,'Plane_movies'))
+# for p in patient_list:
+#     patient_id = os.path.basename(p)
+#     patient_class = os.path.basename(os.path.dirname(p))
+#     ff.make_folder([os.path.join(cg.main_data_dir,'Plane_movies_only_movies',patient_class,patient_id)])
+#     print(patient_class,patient_id)
+
+
+#     movie_lists = ff.find_all_target_files(['*.mp4'],p)
+#     assert len(movie_lists) == 2
+#     for m in movie_lists:
+#         if os.path.isfile(os.path.join(cg.main_data_dir,'Plane_movies_only_movies',patient_class,patient_id,os.path.basename(m))) ==0:
+#             shutil.copy(m,os.path.join(cg.main_data_dir,'Plane_movies_only_movies',patient_class,patient_id,os.path.basename(m)))
+
+
 
 #############################################  
 # file transfer from octomore
-# folder = ff.find_all_target_files(['Resample_MPR'],'/Data/local_storage/Zhennong/')
-# print(folder)
-# for f in folder:
-#     shutil.copytree(f,os.path.join(cg.main_data_dir,'Resample_MPR'))
+folder = ff.find_all_target_files(['Resample_MPR'],'/Data/local_storage/Zhennong/')
+print(folder)
+for f in folder:
+    shutil.copytree(f,os.path.join(cg.main_data_dir,'Resample_MPR'))
 
 # # compress
 # patient_list = ff.get_patient_list_from_csv(os.path.join(cg.spreadsheet_dir,'Final_patient_list_include.csv'))

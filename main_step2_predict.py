@@ -34,7 +34,7 @@ cg = supplement.Experiment()
 MODELS = mm.get_model_list()
 
 # define patient CT image list
-patient_list = ff.find_all_target_files(['Abnormal/*','Normal/*'],cg.local_dir)
+patient_list = ff.find_all_target_files(['*/*'],cg.local_dir)
 print(patient_list.shape)
 print('finish finding all patients')
 
@@ -62,7 +62,7 @@ print('finish building the model')
 
 
 
-for batch in range(0,5):
+for batch in [0,1,2,3,4] * 100:
   MODEL = []
   for ii in range(0,len(MODELS)):
     MODEL.append(MODELS[ii][batch])
@@ -96,12 +96,21 @@ for batch in range(0,5):
     for p in patient_list:
       patient_class = os.path.basename(os.path.dirname(p))
       patient_id = os.path.basename(p)
-   
-
-      if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch),'pred_BASAL_r.npy')) == 1:
-        continue
-
       print(patient_class, patient_id)
+
+      if os.path.isdir(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')) == 0:
+        print('no data')
+        continue
+      
+      # for segmentation already done:
+      # if task_list[task_num] == 's':
+      #   if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred/batch_'+str(batch),'pred_s_0.nii.gz')) == 1:
+      #     print('already done segmentation')
+      #     continue
+      # else:
+      #   if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_' + str(batch),'pred_'+task_list[task_num]+'.npy')) == 1:
+      #     print('already done ', task_list[task_num])
+      #     continue
 
       # find the input images for all time frames:
       if task_list[task_num] == 's':
@@ -134,8 +143,9 @@ for batch in range(0,5):
           u_pred[u_pred == 3] = 4
           u_pred = nb.Nifti1Image(u_pred, u_gt_nii.affine)
           save_path = os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred/batch_'+str(batch),'pred_'+task_list[task_num]+'_'+os.path.basename(img))
-          ff.make_folder([os.path.dirname(os.path.dirname(os.path.dirname(save_path))), os.path.dirname(os.path.dirname(save_path)), os.path.dirname(save_path)])
-          nb.save(u_pred, save_path)
+          print('no saving')
+          #ff.make_folder([os.path.join(cg.save_dir,patient_class), os.path.join(cg.save_dir,patient_class,patient_id),os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred'), os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred/batch_'+str(batch))])
+          #nb.save(u_pred, save_path)
       
       # save vectors
         if task_list[task_num] != 's':
@@ -143,5 +153,6 @@ for batch in range(0,5):
           y_n = ff.normalize(y_pred)
           matrix = np.concatenate((t_pred.reshape(1,3),x_n.reshape(1,3),y_n.reshape(1,3)))
           save_path = os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch),'pred_'+task_list[task_num])
-          ff.make_folder([os.path.dirname(os.path.dirname(os.path.dirname(save_path))), os.path.dirname(os.path.dirname(save_path)), os.path.dirname(save_path)])
-          np.save(save_path,matrix)
+          print('no saving')
+          #ff.make_folder([os.path.join(cg.save_dir,patient_class), os.path.join(cg.save_dir,patient_class,patient_id),os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred'), os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_'+str(batch))])
+          #np.save(save_path,matrix)

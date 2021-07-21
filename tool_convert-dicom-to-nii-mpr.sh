@@ -62,16 +62,6 @@ do
             else
                 ${dcm2niix_fld}dcm2niix -i n -b n -m n -s y -o "${slice_output_folder}/" -f "${i}" -9 -z y "${IMGS[${i}]}"
             fi
-
-
-        
-        # if [ "$(ls -A ${slice_folder})" ]; then
-        #     IMGS=( ${p}${img_fld}/${s}/*)
-        #     for i in $(seq 0 $(( ${#IMGS[*]} - 1 )));
-        #     do
-            
-        #         echo ${IMGS[${i}]}
-        #         ${dcm2niix_fld}dcm2niix -i n -b n -m n -s y -o "${slice_output}/" -f "${i}" -9 -z y "${IMGS[${i}]}"
         done
 	
     done

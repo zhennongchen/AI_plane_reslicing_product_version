@@ -70,9 +70,9 @@ def get_voxel_size(i):
 
 chamber_list = ['2C','3C','4C','SAX']
 chamber_choice = [0,1,2,3]
-patient_list = ff.find_all_target_files(['Normal/*'],os.path.join(cg.main_data_dir,'MPR'))
+patient_list = ff.find_all_target_files(['*/*'],os.path.join(cg.main_data_dir,'MPR'))
 img_fld = 'img-nii-0.625'
-mpr_fld = 'mpr-nii-resample'
+mpr_fld = 'mpr-nii-0.625'
 
 
 for p in patient_list:
@@ -80,7 +80,7 @@ for p in patient_list:
     patient_class = os.path.basename(os.path.dirname(p))
     print(patient_class,patient_id)
 
-    save_folder = os.path.join(p,'plane-vector-manual')
+    save_folder = os.path.join(p,'plane-vector-manual-0.625')
     ff.make_folder([save_folder])
 
 
@@ -97,7 +97,7 @@ for p in patient_list:
         i_affine = ff.check_affine(i)
     
         #mpr 1.5mm
-        j = os.path.join(cg.main_data_dir,'MPR',patient_class,patient_id,mpr_fld,chamber,'0.nii.gz')
+        j = os.path.join(cg.main_data_dir,'Resample_MPR',patient_class,patient_id,mpr_fld,chamber,'0.nii.gz')
         j_affine = nib.load(j).affine
         
         matrix = get_vectors(i,j,i_affine,j_affine)
