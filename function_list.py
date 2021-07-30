@@ -294,10 +294,10 @@ def convert_coordinates(target_affine, initial_affine, r):
     return apply_affine(affine_multiply,r)
 
 # function: get affine matrix from translation,x,y and scale
-def get_affine_from_vectors(mpr_data,volume_affine,vector):
+def get_affine_from_vectors(mpr_data,volume_affine,vector,zoom):
     # it answers one important question: what's [1 1 1] in the coordinate system of predicted plane in that
     # of the whole CT volume
-    [t,x,y,s,i_center] = [vector['t'],vector['x'],vector['y'],[1,1,0.67],vector['img_center']]
+    [t,x,y,s,i_center] = [vector['t'],vector['x'],vector['y'],vector['s']/zoom,vector['img_center']]
     shape = mpr_data.shape
     mpr_center=np.array([(shape[0]-1)/2,(shape[1]-1)/2,0])
     Transform = np.ones((4,4))
@@ -380,10 +380,6 @@ def draw_plane_intersection(plane2_image,plane1_x,plane1_y,plane1_affine,plane2_
     intersect_point = np.cross((d2*n1-d1*n2),u)/(u_length**2)
     if print_message == 1:
         print('point is ', intersect_point)
-    
-    # for upsample
-    #intersect_point_1 = np.array([(intersect_point[0] - 80)*3 + 240 , (intersect_point[1]-80)*3 + 240, 0])
-    #intersect_point = intersect_point_1
 
     result_line = draw_arbitrary_axis(plane2_image,intersect_direct,intersect_point)
     return result_line,intersect_direct,intersect_point

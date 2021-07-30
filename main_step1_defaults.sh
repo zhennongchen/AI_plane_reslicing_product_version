@@ -19,7 +19,7 @@ export CG_FEATURE_DEPTH=8
 
 
 # folders
-export CG_MAIN_DATA_DIR="/Data/McVeighLabSuper/wip/zhennong/2020_after_Junes/"
+export CG_MAIN_DATA_DIR="/Data/McVeighLabSuper/wip/zhennong/"
 export CG_IMAGE_DATA_DIR=${CG_MAIN_DATA_DIR}nii-images/
 export CG_MODEL_DIR="/Data/McVeighLabSuper/projects/Zhennong/AI/CNN/all-classes-all-phases-data-1.5/" 
 export CG_OCTOMORE_DIR="/Data/local_storage/Zhennong/AUH_data/"
