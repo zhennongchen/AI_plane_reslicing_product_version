@@ -297,7 +297,11 @@ def convert_coordinates(target_affine, initial_affine, r):
 def get_affine_from_vectors(mpr_data,volume_affine,vector,zoom):
     # it answers one important question: what's [1 1 1] in the coordinate system of predicted plane in that
     # of the whole CT volume
-    [t,x,y,s,i_center] = [vector['t'],vector['x'],vector['y'],vector['s']/zoom,vector['img_center']]
+   
+    #[t,x,y,s,i_center] = [vector['t'],vector['x'],vector['y'],vector['s']/zoom,vector['img_center']]
+
+    new_s = [a / zoom for a in vector['s']]
+    [t,x,y,s,i_center] = [vector['t'],vector['x'],vector['y'],new_s,vector['img_center']]
     shape = mpr_data.shape
     mpr_center=np.array([(shape[0]-1)/2,(shape[1]-1)/2,0])
     Transform = np.ones((4,4))

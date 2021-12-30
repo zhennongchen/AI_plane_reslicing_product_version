@@ -10,21 +10,16 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-#shopt -s globstar nullglob
-
-###########
-## Logic ##
-###########
 
 # define the folder where dcm2niix function is saved
 dcm2niix_fld="/Users/zhennongchen/Documents/GitHub/AI_reslice_orthogonal_view/dcm2niix_11-Apr-2019/"
 
 
-# define patient lists
+# define patient lists (the folder where )
 #readonly PATIENTS=(/Volumes/McVeighLab/wip/ucsd_lvad/to_be_reviewed/CVC1709271428/)
 #readonly PATIENTS=(/Volumes/McVeighLab/projects/Zhennong/AUH_patients/Original_dicoms/1_post/)
 #readonly PATIENTS=(/Users/zhennongchen/Documents/Zhennong_CT_Data/AUH/1/1_post/ )
-readonly PATIENTS=(/Users/zhennongchen/Downloads/test/tt/ )
+#readonly PATIENTS=(/Users/zhennongchen/Downloads/test/tt/ )    
 
 # define image folder
 img_fld="img_sorted"

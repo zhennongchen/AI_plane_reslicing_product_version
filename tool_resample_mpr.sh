@@ -24,6 +24,9 @@ dv_utils_fld="/home/cnn/Documents/Repos/dv-commandline-utils/bin/"
 PATIENT=(/media/McVeighLabSuper/wip/zhennong/2020_after_Junes/MPR/Abnormal/*/)
 PATIENT+=(/media/McVeighLabSuper/wip/zhennong/2020_after_Junes/MPR/Normal/*/)
 SAVE_DIR="/media/local_storage/Zhennong/Resample_MPR_2020_after_Junes/"
+# PATIENT+=(/media/McVeighLabSuper/wip/zhennong/MPR/Normal/*/)
+# PATIENT+=(/media/McVeighLabSuper/wip/zhennong/MPR/Abnormal/*/)
+# SAVE_DIR="/media/local_storage/Zhennong/Resample_MPR/"
 
 
 SLICE[0]=2C
@@ -58,6 +61,7 @@ do
     mkdir -p ${save_folder}
 
     IMGS=(/media/McVeighLabSuper/wip/zhennong/2020_after_Junes/nii-images/${patient_class}/${patient_id}/${input_fld}/0.nii.gz) ###CHANGE IF MPR HAS A SERIES
+    #IMGS=(/media/McVeighLabSuper/wip/zhennong/nii-images/${patient_class}/${patient_id}/${input_fld}/0.nii.gz) ###CHANGE IF MPR HAS A SERIES
     echo ${IMGS[0]}
 
     for i in $(seq 0 $(( ${#IMGS[*]} - 1 )));

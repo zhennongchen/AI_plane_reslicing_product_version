@@ -24,30 +24,38 @@ zoom_factor = 1 # in case the background in the plane is too large
 
 
 # function to make the image
-def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA, A_2C, A_3C, A_4C ,center_list):
+def plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vector_2C,vector_3C,vector_4C,vector_SA, A_2C, A_3C, A_4C ,center_list,zoom_factor_lax = 1.1 ,zoom_factor_sax = 1.25):
     
     # define interpolation matrix
     inter = ff.define_interpolation(volume_data,Fill_value=volume_data.min(),Method='linear')
     
-    zoom_factor = 1.1
-    # reslice long axis
-    twoc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_2C['t'],vector_2C['x'],vector_2C['y'],vector_2C['s'][0]/zoom_factor,vector_2C['s'][1]/zoom_factor,inter)
-    threec = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_3C['t'],vector_3C['x'],vector_3C['y'],vector_3C['s'][0]/zoom_factor,vector_3C['s'][1]/zoom_factor,inter)
-    fourc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_4C['t'],vector_4C['x'],vector_4C['y'],vector_4C['s'][0]/zoom_factor,vector_4C['s'][1]/zoom_factor,inter)
+    print(zoom_factor_lax) 
+    print(zoom_factor_sax) 
 
-    zoom_factor = 1.25
+    # reslice long axis
+    twoc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_2C['t'],vector_2C['x'],vector_2C['y'],vector_2C['s'][0]/zoom_factor_lax,vector_2C['s'][1]/zoom_factor_lax,inter)
+    threec = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_3C['t'],vector_3C['x'],vector_3C['y'],vector_3C['s'][0]/zoom_factor_lax,vector_3C['s'][1]/zoom_factor_lax,inter)
+    fourc = ff.reslice_mpr(np.zeros(plane_image_size),image_center + vector_4C['t'],vector_4C['x'],vector_4C['y'],vector_4C['s'][0]/zoom_factor_lax,vector_4C['s'][1]/zoom_factor_lax,inter)
+
+
     # reslice short axis
     sax_collection = []
     for i in range(0,9):
-        sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor,vector_SA['s'][1]/zoom_factor,inter))
+        sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor_sax,vector_SA['s'][1]/zoom_factor_sax,inter))
     assert len(sax_collection) == 9
+
+    # get updated affine_matrix for zoomed image
+    A_2C_zoomed = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C,zoom_factor_lax)
+    A_3C_zoomed = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C,zoom_factor_lax)
+    A_4C_zoomed = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C,zoom_factor_lax)
+
 
     # draw intersection lines: LAX lines on SAX
     sax_w_2c = []; sax_w_3c = []; sax_w_4c = []
     for ii in range(0,9):
-        line2c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_2C['x'],vector_2C['y'],A_2C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine)
-        line3c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_3C['x'],vector_3C['y'],A_3C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine)
-        line4c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_4C['x'],vector_4C['y'],A_4C,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA)),volume_affine)
+        line2c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_2C['x'],vector_2C['y'],A_2C_zoomed,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA),zoom_factor_sax),volume_affine)
+        line3c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_3C['x'],vector_3C['y'],A_3C_zoomed,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA),zoom_factor_sax),volume_affine)
+        line4c,_,_ = ff.draw_plane_intersection(sax_collection[ii],vector_4C['x'],vector_4C['y'],A_4C_zoomed,ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[ii],image_center,vector_SA),zoom_factor_sax),volume_affine)
         sax_w_2c.append(line2c)
         sax_w_3c.append(line3c)
         sax_w_4c.append(line4c)
@@ -56,15 +64,15 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
     
     # draw intersection lines: SAX lines on LAX
     twoc_line = np.copy(twoc); threec_line = np.copy(threec); fourc_line = np.copy(fourc)
-    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[2],image_center,vector_SA)),A_2C,volume_affine)
-    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[4],image_center,vector_SA)),A_2C,volume_affine)
-    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[6],image_center,vector_SA)),A_2C,volume_affine)
-    threec_line,_,_ = ff.draw_plane_intersection(threec_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[2],image_center,vector_SA)),A_3C,volume_affine)
-    threec_line,_,_ = ff.draw_plane_intersection(threec_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[4],image_center,vector_SA)),A_3C,volume_affine)
-    threec_line,_,_ = ff.draw_plane_intersection(threec_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[6],image_center,vector_SA)),A_3C,volume_affine)
-    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[2],image_center,vector_SA)),A_4C,volume_affine)
-    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[4],image_center,vector_SA)),A_4C,volume_affine)
-    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[6],image_center,vector_SA)),A_4C,volume_affine)
+    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[2],image_center,vector_SA),zoom_factor_sax),A_2C_zoomed,volume_affine)
+    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[4],image_center,vector_SA),zoom_factor_sax),A_2C_zoomed,volume_affine)
+    twoc_line,_,_ = ff.draw_plane_intersection(twoc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[6],image_center,vector_SA),zoom_factor_sax),A_2C_zoomed,volume_affine)
+    threec_line,_,_ = ff.draw_plane_intersection(threec_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[2],image_center,vector_SA),zoom_factor_sax),A_3C_zoomed,volume_affine)
+    threec_line,_,_ = ff.draw_plane_intersection(threec_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[4],image_center,vector_SA),zoom_factor_sax),A_3C_zoomed,volume_affine)
+    threec_line,_,_ = ff.draw_plane_intersection(threec_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[6],image_center,vector_SA),zoom_factor_sax),A_3C_zoomed,volume_affine)
+    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[2],image_center,vector_SA),zoom_factor_sax),A_4C_zoomed,volume_affine)
+    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[4],image_center,vector_SA),zoom_factor_sax),A_4C_zoomed,volume_affine)
+    fourc_line,_,_ = ff.draw_plane_intersection(fourc_line,vector_SA['x'],vector_SA['y'],ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,ff.make_matrix_for_any_plane_in_SAX_stack(center_list[6],image_center,vector_SA),zoom_factor_sax),A_4C_zoomed,volume_affine)
 
     # normalize by WL and WW and then orient
     twoc_n = ff.set_window(twoc,WL,WW); twoc_n = np.flip(twoc_n.T,0)
@@ -106,7 +114,7 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_c
 
 
 # main function for image
-patient_list = ff.find_all_target_files(['172/172pre'],cg.save_dir)
+patient_list = ff.find_all_target_files(['*/*'],cg.save_dir)
 # define which segmentation prediction batch will be used
 batch_seg = 3
 
@@ -121,8 +129,8 @@ for batch in range(0,5):
         ff.make_folder([os.path.dirname(save_folder),save_folder])
 
         # check whether already done
-        #if os.path.isfile(os.path.join(save_folder,patient_id+'_predicted_planes.mp4')) == 1:
-        # if os.path.isfile(os.path.join(save_folder,'0.png')) == 1:
+        # if os.path.isfile(os.path.join(save_folder,patient_id+'_predicted_planes.mp4')) == 1:
+        # #if os.path.isfile(os.path.join(save_folder,'0.png')) == 1:
         #     print('already done for this patient')
         #     continue
 
@@ -148,9 +156,9 @@ for batch in range(0,5):
 
         # get affine matrix
         volume_affine = ff.check_affine(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
-        A_2C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C)
-        A_3C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C)
-        A_4C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C)
+        A_2C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C,1.0)
+        A_3C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C,1.0)
+        A_4C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C,1.0)
 
 
         # get a center list of SAX stack
@@ -193,7 +201,7 @@ for batch in range(0,5):
 
             time = ff.find_timeframe(v,2)
             save_path = os.path.join(save_folder,str(time) +'.png')
-            plane_image(save_path,volume_data,plane_image_size,WL,WW,zoom_factor,image_center, vector_2C,vector_3C,vector_4C,vector_SA,A_2C, A_3C, A_4C,center_list9)
+            plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vector_2C,vector_3C,vector_4C,vector_SA,A_2C, A_3C, A_4C,center_list9)
             print('finish time '+str(time))
 
         # make movie
