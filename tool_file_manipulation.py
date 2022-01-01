@@ -86,17 +86,30 @@ cg = supplement.Experiment()
 #     shutil.rmtree(f2)
 
 # transfer file to octomore
+# patient_list = ff.find_all_target_files(['*/*'],cg.image_data_dir)
+# ff.make_folder([cg.local_dir])
+# for p in patient_list:
+#     patient_id = os.path.basename(p)
+#     patient_class = os.path.basename(os.path.dirname(p))
+    
+
+#     image_file = ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],p)
+#     assert len(image_file) == 1
+
+#     if os.path.isdir(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')) == 0:
+#         print(patient_class,patient_id)
+#         ff.make_folder([os.path.join(cg.local_dir,patient_class),os.path.join(cg.local_dir,patient_class,patient_id),os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')])
+#         shutil.copy(image_file[0],os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5',os.path.basename(image_file[0])))
+
+# make a spreadsheet for patients
 patient_list = ff.find_all_target_files(['*/*'],cg.image_data_dir)
-ff.make_folder([cg.local_dir])
+result = []
 for p in patient_list:
     patient_id = os.path.basename(p)
     patient_class = os.path.basename(os.path.dirname(p))
-    
+    print(patient_class,patient_id)
 
-    image_file = ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],p)
-    assert len(image_file) == 1
+    result.append([patient_class,patient_id])
 
-    if os.path.isdir(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')) == 0:
-        print(patient_class,patient_id)
-        ff.make_folder([os.path.join(cg.local_dir,patient_class),os.path.join(cg.local_dir,patient_class,patient_id),os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')])
-        shutil.copy(image_file[0],os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5',os.path.basename(image_file[0])))
+df = pd.DataFrame(result,columns=['Patient_ID','WMC'])
+df.to_excel(os.path.join(cg.main_data_dir,'patient_batch_selection.xlsx'),index=False)

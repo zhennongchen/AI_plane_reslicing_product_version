@@ -22,7 +22,7 @@ else:
     color_box_size = [10,20]
 sax_made = 'matlab'
 scale = [1,1,0.67]
-zoom_factor = 1 # in case the background in the plane is too large 
+#zoom_factor = 1 # in case the background in the plane is too large 
 
 
 # function to make the image
@@ -39,7 +39,7 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vecto
 
 
     # reslice short axis
-    print(zoom_factor)
+  
     sax_collection = []
     for i in range(0,9):
         sax_collection.append(ff.reslice_mpr(np.zeros(plane_image_size),center_list[i],vector_SA['x'],vector_SA['y'],vector_SA['s'][0]/zoom_factor_sax,vector_SA['s'][1]/zoom_factor_sax,inter))
@@ -115,10 +115,11 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vecto
 # main function for image
 
 # get batch selection
-batch_select_excel_file = os.path.join('/Data/McVeighLabSuper/projects/Zhennong','Patient_list_batch_selection_AUH.csv')
+batch_select_excel_file = os.path.join(cg.save_dir,'Ashish_ResyncCT_patient_batch_selection.xlsx')
 if os.path.isfile(batch_select_excel_file) == 1:
+    print('yes there is batch selection file')
     batch_pre_select = 1
-    csv_file = pd.read_csv(batch_select_excel_file)
+    csv_file = pd.read_excel(batch_select_excel_file)
 else:
     batch_pre_select = 0
     batch_pick = [3,4,4,4,4]
@@ -134,21 +135,24 @@ for i in range(0,len(patient_list)):
     print(patient_class,patient_id)
 
     if batch_pre_select == 1:
-        case = csv_file[csv_file['Patient_ID'] == patient_id]
+        case = csv_file[(csv_file['Patient_ID'] == patient_class) & (csv_file['WMC'] == patient_id)]
         assert case.shape[0] == 1
         if case.iloc[0]['2C'] == 'x' and case.iloc[0]['SAX'] == 'x':
             print('exclude')
             continue
         else:
             batch_pick = [int(case.iloc[0]['2C']),int(case.iloc[0]['3C']),int(case.iloc[0]['4C']),int(case.iloc[0]['SAX'])]
-    print(batch_pick)
+            zoom_factor_lax = float(case.iloc[0]['zoom_factor_lax'])
+            zoom_factor_sax = float(case.iloc[0]['zoom_factor_sax'])
+    print(batch_pick,zoom_factor_lax,zoom_factor_sax)
 
     save_folder = os.path.join(cg.final_dir,patient_class,patient_id)
     ff.make_folder([os.path.dirname(save_folder),save_folder])
 
-    if os.path.isfile(os.path.join(save_folder,patient_id+'_planes.mp4')) == 1:
+    if os.path.isfile(os.path.join(save_folder,patient_class+'_'+patient_id+'_planes.mp4')) == 1:
         print('already done')
-        os.remove(os.path.join(save_folder,patient_id+'_planes.mp4'))
+        continue
+        #os.remove(os.path.join(save_folder,patient_id+'_planes.mp4'))
     else:
            
         # seg_file = os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred','batch_'+str(batch_pick[0])+'/pred_s_0.nii.gz')
@@ -235,13 +239,13 @@ for i in range(0,len(patient_list)):
             time = ff.find_timeframe(v,2)
             save_path = os.path.join(save_folder,'pngs',str(time) +'.png')
             ff.make_folder([os.path.dirname(save_path)])
-            plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vector_2C,vector_3C,vector_4C,vector_SA,A_2C,A_3C,A_4C,center_list9)
+            plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vector_2C,vector_3C,vector_4C,vector_SA,A_2C,A_3C,A_4C,center_list9,zoom_factor_lax, zoom_factor_sax)
             print('finish time '+str(time))
 
         # make the movie
         pngs = ff.sort_timeframe(ff.find_all_target_files(['*.png'],os.path.join(save_folder,'pngs')),1)
-        save_movie_path = os.path.join(save_folder,patient_id+'_planes.mp4')
-        print(len(pngs))
+        save_movie_path = os.path.join(save_folder,patient_class + '_' + patient_id+'_planes.mp4')
+        print(len(pngs),save_movie_path)
         if len(pngs) == 16:
             fps = 15 # set 16 will cause bug
         elif len(pngs) > 20:
