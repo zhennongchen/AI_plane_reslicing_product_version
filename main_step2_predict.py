@@ -26,6 +26,7 @@ import dvpy as dv
 import dvpy.tf
 import function_list as ff
 import model_list as mm
+import pandas as pd
 
 cg = supplement.Experiment()
 
@@ -34,8 +35,24 @@ cg = supplement.Experiment()
 MODELS = mm.get_model_list()
 
 # define patient CT image list
-patient_list = ff.find_all_target_files(['*/*'],cg.local_dir)
-print(patient_list.shape)
+excel_file = os.path.join('/Data/ContijochLab/projects/ct_gls','Andy_Khan_WMA_scores.xlsx')
+excel_data = pd.read_excel(excel_file)
+patient_list= []
+data_path1 = cg.image_data_dir
+data_path2 = os.path.join(cg.main_data_dir,'2020_after_Junes/nii-images')
+for i in range(0,excel_data.shape[0]):
+  case = excel_data.iloc[i]
+  if os.path.isdir(os.path.join(data_path1,case['Patient_Class'],case['Patient_ID'])) == 1:
+    belong_path = os.path.dirname(os.path.dirname(data_path1))
+  elif os.path.isdir(os.path.join(data_path2,case['Patient_Class'],case['Patient_ID'])) == 1:
+    belong_path = os.path.dirname(data_path2)
+  else:
+    ValueError('wrong!')
+  patient_list.append([case['Patient_Class'],case['Patient_ID'],belong_path])
+print(patient_list)
+
+# patient_list = ff.find_all_target_files(['*/*'],cg.local_dir)
+# print(patient_list.shape) 
 print('finish finding all patients')
 
 # build the model
@@ -70,7 +87,7 @@ for batch in [0,1,2,3,4]:
 
   # prediction task list
   task_list = ['s','2C_t','2C_r','3C_t','3C_r','4C_t','4C_r','BASAL_t','BASAL_r'] 
-  task_num_list = [0]
+  task_num_list = [0,1,2,3,4,5,6,7,8]
 
   # define the generator
   valgen = dv.tf.ImageDataGenerator(3,input_layer_names=['input_1'],output_layer_names=['unet','t','x','y'],)
@@ -94,23 +111,28 @@ for batch in [0,1,2,3,4]:
 
     # predict
     for p in patient_list:
-      patient_class = os.path.basename(os.path.dirname(p))
-      patient_id = os.path.basename(p)
-      print(patient_class, patient_id)
+      # patient_class = os.path.basename(os.path.dirname(p))
+      # patient_id = os.path.basename(p)
+      # print(patient_class, patient_id)
+      patient_class = p[0]
+      patient_id = p[1]
+      belong_path = p[2]
+      print(patient_class,patient_id,p)
+      p = os.path.join(cg.local_dir,patient_class,patient_id)
 
       if os.path.isdir(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')) == 0:
         print('no data')
         continue
       
-      # for segmentation already done:
-      # if task_list[task_num] == 's':
-      #   if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred/batch_'+str(batch),'pred_s_0.nii.gz')) == 1:
-      #     print('already done segmentation')
-      #     continue
-      # else:
-      #   if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_' + str(batch),'pred_'+task_list[task_num]+'.npy')) == 1:
-      #     print('already done ', task_list[task_num])
-      #     continue
+      # for  already done:
+      if task_list[task_num] == 's':
+        if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred/batch_'+str(batch),'pred_s_0.nii.gz')) == 1:
+          print('already done segmentation')
+          continue
+      else:
+        if os.path.isfile(os.path.join(cg.save_dir,patient_class,patient_id,'vector-pred/batch_' + str(batch),'pred_'+task_list[task_num]+'.npy')) == 1:
+          print('already done ', task_list[task_num])
+          continue
 
       # find the input images for all time frames:
       if task_list[task_num] == 's':

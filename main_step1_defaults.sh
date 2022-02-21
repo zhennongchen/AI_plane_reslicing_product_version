@@ -19,12 +19,13 @@ export CG_FEATURE_DEPTH=8
 
 
 # folders
-export CG_MAIN_DATA_DIR="/Data/McVeighLabSuper/wip/Ashish_ResyncCT/"
+export CG_MAIN_DATA_DIR="/Data/McVeighLab/wip/zhennong/"
 export CG_IMAGE_DATA_DIR=${CG_MAIN_DATA_DIR}nii-images/
-export CG_MODEL_DIR="/Data/McVeighLabSuper/projects/Zhennong/AI/CNN/all-classes-all-phases-data-1.5/" 
-export CG_OCTOMORE_DIR="/Data/local_storage/Zhennong/Ashish_ResyncCT/"
-export CG_SAVE_DIR="/Data/McVeighLabSuper/wip/Ashish_ResyncCT/predicts/"
-export CG_FINAL_DIR="/Data/McVeighLabSuper/wip/Ashish_ResyncCT/plane_movies/"
+export CG_MODEL_DIR="/Data/McVeighLab/projects/Zhennong/AI/CNN/all-classes-all-phases-data-1.5/" 
+# export CG_OCTOMORE_DIR="/Data/local_storage/Zhennong/Ashish_ResyncCT/"
+export CG_OCTOMORE_DIR="/Data/ExtraDrive/workspaces/zhennong/VR_Data"
+export CG_SAVE_DIR="/Data/McVeighLab/wip/zhennong/predicted_plane_vectors/"
+export CG_FINAL_DIR="/Data/McVeighLab/wip/zhennong/DL_predicted_planes/"
 
 
 

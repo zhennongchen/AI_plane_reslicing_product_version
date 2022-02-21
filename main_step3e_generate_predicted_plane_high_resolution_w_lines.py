@@ -115,7 +115,7 @@ def plane_image(save_path,volume_data,plane_image_size,WL,WW,image_center, vecto
 # main function for image
 
 # get batch selection
-batch_select_excel_file = os.path.join(cg.save_dir,'Ashish_ResyncCT_patient_batch_selection.xlsx')
+batch_select_excel_file = os.path.join(cg.main_data_dir,'patient_plane_batch_selection.xlsx')
 if os.path.isfile(batch_select_excel_file) == 1:
     print('yes there is batch selection file')
     batch_pre_select = 1
@@ -134,8 +134,11 @@ for i in range(0,len(patient_list)):
     patient_id = os.path.basename(p)
     print(patient_class,patient_id)
 
+    zoom_factor_lax = 1.1
+    zoom_factor_save = 1.25
+    
     if batch_pre_select == 1:
-        case = csv_file[(csv_file['Patient_ID'] == patient_class) & (csv_file['WMC'] == patient_id)]
+        case = csv_file[(csv_file['Patient_Class'] == patient_class) & (csv_file['Patient_ID'] == patient_id)]
         assert case.shape[0] == 1
         if case.iloc[0]['2C'] == 'x' and case.iloc[0]['SAX'] == 'x':
             print('exclude')
@@ -149,16 +152,29 @@ for i in range(0,len(patient_list)):
     save_folder = os.path.join(cg.final_dir,patient_class,patient_id)
     ff.make_folder([os.path.dirname(save_folder),save_folder])
 
-    if os.path.isfile(os.path.join(save_folder,patient_class+'_'+patient_id+'_planes.mp4')) == 1:
+
+
+    if os.path.isfile(os.path.join(save_folder,patient_id+'_planes.mp4')) == 1:
         print('already done')
         continue
         #os.remove(os.path.join(save_folder,patient_id+'_planes.mp4'))
     else:
            
+        # this part just for VR data
+        if os.path.isdir(os.path.join(cg.main_data_dir,'nii-images',patient_class,patient_id)) == 1:
+            belong_path = cg.main_data_dir
+        elif os.path.isdir(os.path.join(cg.main_data_dir,'2020_after_Junes/nii-images',patient_class,patient_id)) == 1:
+            belong_path = os.path.join(cg.main_data_dir,'2020_after_Junes')
+        else:
+            ValueError('no this case')
+
+
         # seg_file = os.path.join(cg.save_dir,patient_class,patient_id,'seg-pred','batch_'+str(batch_pick[0])+'/pred_s_0.nii.gz')
         # seg = nib.load(seg_file)
         # seg_data = seg.get_fdata()
-        volume_dim = nib.load(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
+
+        #volume_dim = nib.load(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
+        volume_dim = nib.load(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
         image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
 
         # # load vectors
@@ -202,14 +218,16 @@ for i in range(0,len(patient_list)):
           
 
         # get affine matrix
-        volume_affine = ff.check_affine(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        # volume_affine = ff.check_affine(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        volume_affine = ff.check_affine(os.path.join(belong_path,'nii-images',patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
         A_2C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C,1.0)
         A_3C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C,1.0)
         A_4C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C,1.0)
       
 
         # get a center list of SAX stack
-        pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        # pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        pix_dim = ff.get_voxel_size(os.path.join(belong_path,'nii-images',patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
         pix_size = ff.length(pix_dim)
         center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,pix_size)
         print('pix_size: ',pix_dim,pix_size)
@@ -220,7 +238,9 @@ for i in range(0,len(patient_list)):
         #     ValueError('no LV segmentation')
 
         
-        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/*.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+        # volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/*.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/*.nii.gz'],os.path.join(belong_path,'nii-images',patient_class,patient_id)),2)
+        
 
         for v in volume_list:
             volume = nib.load(v)
@@ -244,7 +264,7 @@ for i in range(0,len(patient_list)):
 
         # make the movie
         pngs = ff.sort_timeframe(ff.find_all_target_files(['*.png'],os.path.join(save_folder,'pngs')),1)
-        save_movie_path = os.path.join(save_folder,patient_class + '_' + patient_id+'_planes.mp4')
+        save_movie_path = os.path.join(save_folder, patient_id+'_planes.mp4')
         print(len(pngs),save_movie_path)
         if len(pngs) == 16:
             fps = 15 # set 16 will cause bug

@@ -20,7 +20,7 @@ plane_image_size = [160,160,1]
 color_box_size = [10,20]
 
 scale = [1,1,0.67]
-zoom_factor = 1 # in case the background in the plane is too large 
+#zoom_factor = 1 # in case the background in the plane is too large 
 
 
 # function to make the image
@@ -129,12 +129,23 @@ for batch in range(0,5):
         ff.make_folder([os.path.dirname(save_folder),save_folder])
 
         # check whether already done
-        # if os.path.isfile(os.path.join(save_folder,patient_id+'_predicted_planes.mp4')) == 1:
-        # #if os.path.isfile(os.path.join(save_folder,'0.png')) == 1:
-        #     print('already done for this patient')
-        #     continue
+        #if os.path.isfile(os.path.join(save_folder,patient_id+'_predicted_planes.mp4')) == 1:
+        if os.path.isfile(os.path.join(save_folder,'0.png')) == 1:
+            print('already done for this patient')
+            continue
+        
+        # LOAD segmentation
+        # for normal cases
+        # seg = nib.load(os.path.join(patient,'seg-pred/batch_'+str(batch_seg),'pred_s_0.nii.gz')); seg_data = seg.get_fdata()
+        # for my VR dataset
+        if os.path.isfile(os.path.join(cg.main_data_dir,'predicted_seg',patient_class,patient_id,'seg-nii-0.625-4classes-connected-retouch-1.5/pred_s_0.nii.gz')) == 1:
+            seg = nib.load(os.path.join(cg.main_data_dir,'predicted_seg',patient_class,patient_id,'seg-nii-0.625-4classes-connected-retouch-1.5/pred_s_0.nii.gz')); seg_data = seg.get_fdata()
+        elif os.path.isfile(os.path.join(cg.main_data_dir,'2020_after_Junes','predicted_seg',patient_class,patient_id,'seg-nii-0.625-4classes-connected-retouch-1.5/pred_s_0.nii.gz')) == 1:
+            seg = nib.load(os.path.join(cg.main_data_dir,'2020_after_Junes','predicted_seg',patient_class,patient_id,'seg-nii-0.625-4classes-connected-retouch-1.5/pred_s_0.nii.gz')); seg_data = seg.get_fdata()
+        else:
+            ValueError('no retouched seg')
 
-        seg = nib.load(os.path.join(patient,'seg-pred/batch_'+str(batch_seg),'pred_s_0.nii.gz')); seg_data = seg.get_fdata()
+
         volume_dim = nib.load(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz')).shape
         image_center = np.array([(volume_dim[0]-1)/2,(volume_dim[1]-1)/2,(volume_dim[-1]-1)/2]) 
 
@@ -155,14 +166,16 @@ for batch in range(0,5):
 
 
         # get affine matrix
-        volume_affine = ff.check_affine(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        # volume_affine = ff.check_affine(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        volume_affine = ff.check_affine(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
         A_2C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_2C,1.0)
         A_3C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_3C,1.0)
         A_4C = ff.get_affine_from_vectors(np.zeros(plane_image_size),volume_affine,vector_4C,1.0)
 
 
         # get a center list of SAX stack
-        pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        # pix_dim = ff.get_voxel_size(os.path.join(cg.image_data_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
+        pix_dim = ff.get_voxel_size(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5/0.nii.gz'))
         pix_size = ff.length(pix_dim)
         center_list = ff.find_center_list_whole_stack(image_center + vector_SA['t'],normal_vector,a,b,8,2.59)
 
@@ -174,7 +187,8 @@ for batch in range(0,5):
 
 
         # reslice mpr for every time frame
-        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+        #volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],os.path.join(cg.image_data_dir,patient_class,patient_id)),2)
+        volume_list = ff.sort_timeframe(ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],os.path.join(cg.local_dir,patient_class,patient_id)),2)
 
 
         for v in volume_list:

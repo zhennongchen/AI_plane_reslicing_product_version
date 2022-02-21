@@ -14,37 +14,14 @@ import supplement
 np.random.seed(0)
 cg = supplement.Experiment()
 
-# delete
+# # delete
 # path1 = "/Data/McVeighLabSuper/wip/zhennong/"
 # path2 = "/Data/McVeighLabSuper/wip/zhennong/2020_after_Junes/"
 
-# path1 = '/Data/local_storage/Zhennong/Resample_MPR'
-# path2 = '/Data/local_storage/Zhennong/Resample_MPR_2020_after_Junes/'
-
-# subfolder = 'MPR'
-
-# patient_list_excel = pd.read_excel(os.path.join('/Data/McVeighLabSuper/wip/zhennong/Patient_list','Patients_We_need_to_reslice_LAX_apex.xlsx'))
-# patient_list = []
-# for i in range(0,patient_list_excel.shape[0]):
-#     if patient_list_excel.iloc[i]['done'] == 'x':
-#         continue
-#     if patient_list_excel.iloc[i]['Patient_Class'] == '':
-#         continue
-#     patient_list.append([patient_list_excel.iloc[i]['Patient_Class'], patient_list_excel.iloc[i]['Patient_ID']])
-
-# for i in range(0,len(patient_list)):
-#     patient_class = patient_list[i][0]
-#     patient_id = patient_list[i][1]
-#     folder = os.path.join(path1,subfolder,patient_class,patient_id)
-#     if os.path.isdir(folder) == 1:
-#         shutil.rmtree(folder)
-#         print(folder)
-#     else:
-#         folder = os.path.join(path2,subfolder,patient_class,patient_id)
-#         if os.path.isdir(folder) == 1:
-#             shutil.rmtree(folder)
-#             print(folder)
-
+# file_path = ff.find_all_target_files(['predicted_planes/*/*/planes_pred_low_res/*/*.png','predicted_planes/*/*/slice_num*'],cg.main_data_dir)
+# print(len(file_path),file_path)
+# for f in file_path:
+#   os.remove(f)
     
 
 
@@ -87,29 +64,49 @@ cg = supplement.Experiment()
 
 # transfer file to octomore
 # patient_list = ff.find_all_target_files(['*/*'],cg.image_data_dir)
-# ff.make_folder([cg.local_dir])
+
+excel_file = os.path.join('/Data/ContijochLab/projects/ct_gls','Andy_Khan_WMA_scores.xlsx')
+excel_data = pd.read_excel(excel_file)
+patient_list= []
+data_path1 = cg.image_data_dir
+data_path2 = os.path.join(cg.main_data_dir,'2020_after_Junes/nii-images')
+for i in range(0,excel_data.shape[0]):
+  case = excel_data.iloc[i]
+  if os.path.isdir(os.path.join(data_path1,case['Patient_Class'],case['Patient_ID'])) == 1:
+    belong_path = os.path.dirname(os.path.dirname(data_path1))
+  elif os.path.isdir(os.path.join(data_path2,case['Patient_Class'],case['Patient_ID'])) == 1:
+    belong_path = os.path.dirname(data_path2)
+  else:
+    ValueError('wrong!')
+  patient_list.append([case['Patient_Class'],case['Patient_ID'],belong_path])
+print(patient_list)
+
+ff.make_folder([cg.local_dir])
+
+for p in patient_list:
+    # patient_id = os.path.basename(p)
+    # patient_class = os.path.basename(os.path.dirname(p))
+    patient_class = p[0]; patient_id = p[1]
+    
+
+    # image_file = ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],p)
+    image_file = ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],os.path.join(p[2],'nii-images',p[0],p[1]))
+    assert len(image_file) == 1
+
+    if os.path.isdir(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')) == 0:
+        print(patient_class,patient_id)
+        ff.make_folder([os.path.join(cg.local_dir,patient_class),os.path.join(cg.local_dir,patient_class,patient_id),os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')])
+        shutil.copy(image_file[0],os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5',os.path.basename(image_file[0])))
+
+# make a spreadsheet for patients
+# patient_list = ff.find_all_target_files(['*/*'],os.path.join(cg.main_data_dir,'predicted_planes'))
+# result = []
 # for p in patient_list:
 #     patient_id = os.path.basename(p)
 #     patient_class = os.path.basename(os.path.dirname(p))
-    
+#     print(patient_class,patient_id)
 
-#     image_file = ff.find_all_target_files(['img-nii-1.5/0.nii.gz'],p)
-#     assert len(image_file) == 1
+#     result.append([patient_class,patient_id])
 
-#     if os.path.isdir(os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')) == 0:
-#         print(patient_class,patient_id)
-#         ff.make_folder([os.path.join(cg.local_dir,patient_class),os.path.join(cg.local_dir,patient_class,patient_id),os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5')])
-#         shutil.copy(image_file[0],os.path.join(cg.local_dir,patient_class,patient_id,'img-nii-1.5',os.path.basename(image_file[0])))
-
-# make a spreadsheet for patients
-patient_list = ff.find_all_target_files(['*/*'],cg.image_data_dir)
-result = []
-for p in patient_list:
-    patient_id = os.path.basename(p)
-    patient_class = os.path.basename(os.path.dirname(p))
-    print(patient_class,patient_id)
-
-    result.append([patient_class,patient_id])
-
-df = pd.DataFrame(result,columns=['Patient_ID','WMC'])
-df.to_excel(os.path.join(cg.main_data_dir,'patient_batch_selection.xlsx'),index=False)
+# df = pd.DataFrame(result,columns=['Patient_Class','Patient_ID'])
+# df.to_excel(os.path.join(cg.main_data_dir,'patient_plane_batch_selection.xlsx'),index=False)
