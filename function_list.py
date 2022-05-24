@@ -110,21 +110,6 @@ def get_predicted_vectors(file_t,file_r,scale,image_center):
     result = {'t':t,'x':x,'y':y,'s':scale,'img_center':image_center}
     return result
 
-# function: two functions above in the product version:
-def get_ground_truth_vectors_product_v(filename):
-    a = np.load(os.path.join(filename),allow_pickle=True)
-    [t,x,y,img_center] = [a[0],a[2],a[3],a[4]]
-    result = {'t':t,'x':x,'y':y,'img_center':img_center}
-    return result
-
-def get_predicted_vectors_product_v(file_t,file_r,scale,image_center):
-    f1 = np.load(os.path.join(file_t),allow_pickle=True)
-    f2 = np.load(os.path.join(file_r),allow_pickle=True)
-    t = turn_to_pixel(f1[0])
-    [x,y] = [f2[1],f2[-1]]
-    result = {'t':t,'x':x,'y':y,'s':scale,'img_center':image_center}
-    return result
-
 # function: find the matrix of vectors for any plane in SA stack based on the basal vectors
 def make_matrix_for_any_plane_in_SAX_stack(plane_center,image_center,basal_vectors):
     result = {'t':plane_center - image_center,'x':basal_vectors['x'],'y':basal_vectors['y'],'s':basal_vectors['s'],'img_center':basal_vectors['img_center']}
@@ -422,9 +407,11 @@ def find_timeframe(file,num_of_dots,signal = '/'):
         num1 = [i for i, e in enumerate(k) if e == '.'][-2]
     num2 = [i for i,e in enumerate(k) if e==signal][-1]
     kk=k[num2+1:num1]
-    if len(kk)>1:
+    if len(kk)==2:
         return int(kk[0])*10+int(kk[1])
-    else: 
+    if len(kk) == 3:
+        return int(kk[0])*100 + int(kk[1])*10 + int(kk[2])
+    if len(kk)==1: 
         return int(kk[0])
 
 # function: sort files based on their time frames
